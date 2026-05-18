@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEDU — Learn Egyptian Hieroglyphs</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Egyptian+Hieroglyphs&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  /* ------------ DESIGN TOKENS ------------ */
+  :root {
+    /* sandstone + tomb palette */
+    --bg-deep: #0E0A05;
+    --bg-night: #15100A;
+    --surface: #1A140C;
+    --surface-2: #251B0F;
+    --surface-3: #322516;
+    --hairline: rgba(212, 162, 76, 0.18);
+    --hairline-strong: rgba(212, 162, 76, 0.32);
+
+    --sandstone: #E8D9B0;
+    --papyrus: #F4E8C8;
+    --papyrus-warm: #EAD9A8;
+    --bone: #D9C99B;
+
+    --gold: #D4A24C;
+    --gold-bright: #E8C36E;
+    --gold-deep: #8C6A2A;
+    --gold-glow: rgba(232, 195, 110, 0.45);
+
+    --lapis: #2E5C8A;
+    --lapis-bright: #4A82B8;
+    --lapis-deep: #1A3A5F;
+
+    --terracotta: #B8552E;
+    --terracotta-bright: #D67244;
+
+    --text: #F4E8C8;
+    --text-dim: #C9B68A;
+    --text-mute: #8B7855;
+    --text-faint: #5D5135;
+
+    /* type */
+    --font-display: "Cinzel", "Times New Roman", serif;
+    --font-body: "Outfit", -apple-system, "Helvetica Neue", sans-serif;
+    --font-glyph: "Noto Sans Egyptian Hieroglyphs", serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* sandstone texture noise + warm vignette across whole app */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(212, 162, 76, 0.08), transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(46, 92, 138, 0.07), transparent 50%),
+      radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.5) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.83 0 0 0 0 0.65 0 0 0 0 0.30 0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+  }
+
+  button {
+    font-family: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  input, textarea {
+    font-family: inherit;
+    color: inherit;
+  }
+
+  /* ------------ TYPE ------------ */
+  .h-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+  }
+  .h-eyebrow {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .glyph {
+    font-family: var(--font-glyph);
+    font-feature-settings: normal;
+    line-height: 1;
+  }
+
+  /* ------------ APP CHROME ------------ */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: linear-gradient(180deg, rgba(14,10,5,0.95) 0%, rgba(14,10,5,0.85) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .topbar-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    user-select: none;
+    cursor: pointer;
+  }
+  .logo-mark {
+    width: 38px; height: 38px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold-deep));
+    display: grid; place-items: center;
+    font-family: var(--font-glyph);
+    font-size: 26px;
+    color: var(--bg-deep);
+    box-shadow:
+      0 0 0 1px var(--gold-deep),
+      0 4px 14px rgba(212, 162, 76, 0.35),
+      inset 0 -2px 4px rgba(0,0,0,0.3);
+  }
+  .logo-text {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0.34em;
+    color: var(--papyrus);
+    text-shadow: 0 0 24px rgba(212, 162, 76, 0.25);
+  }
+  .logo-tag {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-top: 2px;
+  }
+
+  .nav {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+
+  .nav-item {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    transition: all 0.18s ease;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 8px;
+    position: relative;
+  }
+  .nav-item .nav-glyph {
+    font-family: var(--font-glyph);
+    font-size: 18px;
+    color: var(--gold);
+    opacity: 0.7;
+    transition: all 0.18s ease;
+  }
+  .nav-item:hover {
+    color: var(--papyrus);
+    background: rgba(212, 162, 76, 0.06);
+  }
+  .nav-item.active {
+    color: var(--papyrus);
+    background: linear-gradient(180deg, rgba(212, 162, 76, 0.14), rgba(212, 162, 76, 0.06));
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  }
+  .nav-item.active .nav-glyph {
+    opacity: 1;
+    color: var(--gold-bright);
+    text-shadow: 0 0 12px var(--gold-glow);
+  }
+
+  /* ------------ LAYOUT ------------ */
+  .page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 36px 28px 80px;
+  }
+  .page-header {
+    margin-bottom: 32px;
+  }
+  .page-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(32px, 5vw, 52px);
+    color: var(--papyrus);
+    letter-spacing: 0.04em;
+  }
+  .page-subtitle {
+    color: var(--text-mute);
+    font-size: 16px;
+    margin-top: 8px;
+    max-width: 620px;
+  }
+
+  /* ------------ CARDS / TOMB SURFACES ------------ */
+  .surface {
+    background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    position: relative;
+  }
+  .surface-stone {
+    background:
+      linear-gradient(180deg, rgba(232, 217, 176, 0.05) 0%, rgba(232, 217, 176, 0.01) 100%),
+      linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    box-shadow:
+      inset 0 1px 0 rgba(232, 217, 176, 0.04),
+      inset 0 -1px 0 rgba(0,0,0,0.4),
+      0 20px 40px -20px rgba(0,0,0,0.5);
+  }
+  .surface-papyrus {
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(232, 195, 110, 0.12), transparent 60%),
+      linear-gradient(180deg, #E8D9B0 0%, #D9C99B 100%);
+    color: #2A1F0E;
+    border-radius: 16px;
+    border: 1px solid rgba(140, 106, 42, 0.4);
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.05) inset,
+      0 30px 60px -30px rgba(0,0,0,0.7);
+    position: relative;
+  }
+  .surface-papyrus::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0 0.1 0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>");
+    mix-blend-mode: multiply;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  /* corner gold accent for stone surfaces */
+  .stone-corners::after {
+    content: "";
+    position: absolute; inset: 8px;
+    border: 1px solid transparent;
+    border-image: linear-gradient(135deg, var(--gold-deep) 0%, transparent 30%, transparent 70%, var(--gold-deep) 100%) 1;
+    pointer-events: none;
+    border-radius: 12px;
+  }
+
+  /* ------------ BUTTONS ------------ */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.18s ease;
+    cursor: pointer;
+    user-select: none;
+  }
+  .btn-primary {
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color: var(--bg-deep);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 240, 200, 0.5),
+      inset 0 -1px 0 rgba(0,0,0,0.2),
+      0 6px 18px rgba(212, 162, 76, 0.4);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 240, 200, 0.6),
+      inset 0 -1px 0 rgba(0,0,0,0.2),
+      0 10px 26px rgba(212, 162, 76, 0.5);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+  .btn-ghost:hover {
+    color: var(--papyrus);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+    background: rgba(212, 162, 76, 0.05);
+  }
+  .btn-lapis {
+    background: linear-gradient(180deg, var(--lapis-bright), var(--lapis));
+    color: var(--papyrus);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      0 6px 18px rgba(46, 92, 138, 0.35);
+  }
+
+  /* ------------ INPUTS ------------ */
+  .input, .textarea {
+    width: 100%;
+    background: var(--bg-deep);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--papyrus);
+    font-size: 16px;
+    transition: all 0.18s ease;
+  }
+  .textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  .input:focus, .textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212, 162, 76, 0.15);
+  }
+
+  /* ------------ ANIMATIONS ------------ */
+  @keyframes glyphCarveIn {
+    0% { opacity: 0; transform: scale(0.5) rotate(-8deg); filter: blur(8px); }
+    60% { opacity: 1; transform: scale(1.15) rotate(2deg); filter: blur(0); }
+    100% { opacity: 1; transform: scale(1) rotate(0); filter: blur(0); }
+  }
+  @keyframes glyphGlow {
+    0%, 100% { text-shadow: 0 0 12px var(--gold-glow), 0 0 24px rgba(212, 162, 76, 0.2); }
+    50%      { text-shadow: 0 0 20px var(--gold-glow), 0 0 40px rgba(212, 162, 76, 0.35); }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .glyph-glow {
+    animation: glyphGlow 4s ease-in-out infinite;
+  }
+  .fade-up {
+    animation: fadeUp 0.5s ease-out backwards;
+  }
+
+  /* ------------ UTILS ------------ */
+  .gold { color: var(--gold-bright); }
+  .muted { color: var(--text-mute); }
+  .small-caps {
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    font-family: var(--font-display);
+    font-weight: 500;
+  }
+
+  /* scroll style */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-night); }
+  ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold-deep); }
+
+  /* mobile */
+  @media (max-width: 760px) {
+    .topbar-inner { padding: 12px 16px; gap: 12px; flex-wrap: wrap; }
+    .logo-tag { display: none; }
+    .nav { width: 100%; }
+    .page { padding: 24px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Data + helpers -->
+<script>
+// ============================================================
+// MEDU — Egyptian Hieroglyph data
+// All glyphs use Unicode block U+13000–U+1342F
+// ============================================================
+
+// 24 uniliteral signs — the Egyptian "alphabet"
+// Each English letter maps to the closest Egyptian phoneme
+window.ALPHABET = [
+  { letter: "A", glyph: "𓄿", name: "Vulture",         sound: "ah",  hint: "Egyptian vulture — the breathy 'A' sound" },
+  { letter: "B", glyph: "𓃀", name: "Foot",            sound: "b",   hint: "A single foot — straight 'B'" },
+  { letter: "C", glyph: "𓎡", name: "Basket",          sound: "k",   hint: "Egyptian had no soft C — uses K" },
+  { letter: "D", glyph: "𓂧", name: "Hand",            sound: "d",   hint: "An open hand — 'D'" },
+  { letter: "E", glyph: "𓇋", name: "Reed",            sound: "ee",  hint: "A flowering reed — long E or I" },
+  { letter: "F", glyph: "𓆑", name: "Horned viper",    sound: "f",   hint: "A horned viper — 'F'" },
+  { letter: "G", glyph: "𓎼", name: "Jar stand",       sound: "g",   hint: "A pottery stand — hard 'G'" },
+  { letter: "H", glyph: "𓉔", name: "Reed shelter",    sound: "h",   hint: "A reed shelter seen from above" },
+  { letter: "I", glyph: "𓇋", name: "Reed",            sound: "ee",  hint: "Same reed — short or long I" },
+  { letter: "J", glyph: "𓆓", name: "Cobra",           sound: "dj",  hint: "A resting cobra — the 'DJ' sound" },
+  { letter: "K", glyph: "𓎡", name: "Basket",          sound: "k",   hint: "A handled basket — 'K'" },
+  { letter: "L", glyph: "𓃭", name: "Lion",            sound: "l",   hint: "A recumbent lion — 'L'" },
+  { letter: "M", glyph: "𓅓", name: "Owl",             sound: "m",   hint: "An owl — 'M'" },
+  { letter: "N", glyph: "𓈖", name: "Water ripple",    sound: "n",   hint: "A ripple of water — 'N'" },
+  { letter: "O", glyph: "𓅱", name: "Quail chick",     sound: "oo",  hint: "Egyptian used W for O sounds" },
+  { letter: "P", glyph: "𓊪", name: "Reed stool",      sound: "p",   hint: "A reed stool — 'P'" },
+  { letter: "Q", glyph: "𓏘", name: "Hill slope",      sound: "q",   hint: "A hill slope — deep 'Q'" },
+  { letter: "R", glyph: "𓂋", name: "Mouth",           sound: "r",   hint: "A mouth — 'R'" },
+  { letter: "S", glyph: "𓋴", name: "Folded cloth",    sound: "s",   hint: "Folded cloth — 'S'" },
+  { letter: "T", glyph: "𓏏", name: "Bread loaf",      sound: "t",   hint: "A loaf of bread — 'T'" },
+  { letter: "U", glyph: "𓅱", name: "Quail chick",     sound: "oo",  hint: "Same quail chick — 'U' or 'W'" },
+  { letter: "V", glyph: "𓆑", name: "Horned viper",    sound: "f",   hint: "No V in Egyptian — uses F" },
+  { letter: "W", glyph: "𓅱", name: "Quail chick",     sound: "w",   hint: "A baby quail — 'W' or 'U'" },
+  { letter: "X", glyph: "𓐍", name: "Placenta",        sound: "kh",  hint: "Throaty 'KH' — closest to X" },
+  { letter: "Y", glyph: "𓇌", name: "Two reeds",       sound: "y",   hint: "Two reeds together — 'Y'" },
+  { letter: "Z", glyph: "𓊃", name: "Door bolt",       sound: "z",   hint: "A door bolt — 'Z' or 'S'" },
+];
+
+window.DIGRAPHS = [
+  { seq: "SH", glyph: "𓈙", name: "Garden pool",     sound: "sh", hint: "A garden pool — 'SH' sound" },
+  { seq: "CH", glyph: "𓍿", name: "Tethering rope",  sound: "tj", hint: "Rope for tying animals — 'CH'" },
+  { seq: "TH", glyph: "𓍿", name: "Tethering rope",  sound: "tj", hint: "Closest match to 'TH'" },
+  { seq: "PH", glyph: "𓆑", name: "Horned viper",    sound: "f",  hint: "PH = F sound" },
+  { seq: "CK", glyph: "𓎡", name: "Basket",          sound: "k",  hint: "CK = K sound" },
+  { seq: "QU", glyph: "𓏘", name: "Hill slope",      sound: "q",  hint: "QU collapses to Q" },
+];
+
+window.WORD_GLYPHS = [
+  { word: "ANKH",      glyph: "𓋹",   meaning: "Life — the breath of the gods" },
+  { word: "LIFE",      glyph: "𓋹",   meaning: "Same glyph as ANKH" },
+  { word: "RA",        glyph: "𓇳",   meaning: "Ra — the sun god" },
+  { word: "SUN",       glyph: "𓇳",   meaning: "The sun disc" },
+  { word: "DJED",      glyph: "𓊽",   meaning: "Stability — spine of Osiris" },
+  { word: "WAS",       glyph: "𓌀",   meaning: "Power — the was scepter" },
+  { word: "EYE",       glyph: "𓂀",   meaning: "Eye of Horus — protection" },
+  { word: "HORUS",     glyph: "𓅃",   meaning: "The falcon god Horus" },
+  { word: "FALCON",    glyph: "𓅃",   meaning: "The Horus falcon" },
+  { word: "NEFER",     glyph: "𓄤",   meaning: "Beautiful, good, perfect" },
+  { word: "HOTEP",     glyph: "𓊵",   meaning: "Peace, satisfaction, offering" },
+  { word: "SKY",       glyph: "𓇯",   meaning: "The heavens" },
+  { word: "STAR",      glyph: "𓇼",   meaning: "A five-pointed star" },
+  { word: "WATER",     glyph: "𓈗",   meaning: "Three water ripples = plural water" },
+  { word: "HOUSE",     glyph: "𓉐",   meaning: "Plan of a house" },
+  { word: "BREAD",     glyph: "𓏏",   meaning: "A loaf of bread" },
+  { word: "MOUTH",     glyph: "𓂋",   meaning: "The mouth glyph" },
+  { word: "SCARAB",    glyph: "𓆣",   meaning: "Khepri — the rising sun beetle" },
+  { word: "GOD",       glyph: "𓊹",   meaning: "Netjer — a deity" },
+  { word: "PHARAOH",   glyph: "𓉐𓉻", meaning: "Per-aa — 'great house'" },
+  { word: "KING",      glyph: "𓇓",   meaning: "Sedge plant of Upper Egypt" },
+  { word: "QUEEN",     glyph: "𓇓𓏏", meaning: "King + feminine ending" },
+  { word: "EGYPT",     glyph: "𓆎𓅓𓏏𓊖", meaning: "Kemet — 'the black land'" },
+  { word: "KEMET",     glyph: "𓆎𓅓𓏏𓊖", meaning: "Egypt — 'the black land'" },
+  { word: "GOLD",      glyph: "𓋞",   meaning: "Nub — gold collar" },
+  { word: "NUB",       glyph: "𓋞",   meaning: "Gold" },
+];
+
+window.PHARAOHS = [
+  { name: "Tutankhamun", glyph: "𓇳𓄤𓍿𓏏𓅱𓏏", dates: "c. 1341 – 1323 BCE", dynasty: "18th Dynasty", title: "The Boy King", fact: "Became pharaoh at age 9. His tomb (KV62) was found nearly untouched in 1922 by Howard Carter — packed with over 5,000 objects including a solid gold coffin and the famous death mask.", color: "#D4A24C" },
+  { name: "Cleopatra VII", glyph: "𓎤𓃭𓇋𓍯𓊪𓄿𓂧𓂋𓄿", dates: "69 – 30 BCE", dynasty: "Ptolemaic Dynasty", title: "The Last Pharaoh", fact: "Spoke at least 9 languages and was the first Ptolemaic ruler to learn Egyptian. Allied with Julius Caesar and Mark Antony before Egypt fell to Rome.", color: "#B8552E" },
+  { name: "Ramses II", glyph: "𓍑𓁛𓈘𓁛𓄟𓋴𓋴𓅱", dates: "c. 1303 – 1213 BCE", dynasty: "19th Dynasty", title: "Ramses the Great", fact: "Reigned 66 years, fathered around 100 children, and built more temples than any other pharaoh — including Abu Simbel, carved into a cliff face.", color: "#8B3A3A" },
+  { name: "Hatshepsut", glyph: "𓁹𓁗𓏏𓄟𓋴𓏏", dates: "c. 1507 – 1458 BCE", dynasty: "18th Dynasty", title: "Foremost of Noble Ladies", fact: "One of ancient Egypt's few female pharaohs. Wore the false beard of kingship and sent trade expeditions to the mysterious Land of Punt.", color: "#2E5C8A" },
+  { name: "Khufu", glyph: "𓐍𓅱𓆑𓅱", dates: "c. 2589 – 2566 BCE", dynasty: "4th Dynasty", title: "Builder of the Great Pyramid", fact: "Commissioned the Great Pyramid of Giza — 2.3 million stone blocks, originally 481 ft tall, the tallest structure on Earth for 3,800 years.", color: "#D4A24C" },
+  { name: "Akhenaten", glyph: "𓇳𓐍𓏏𓈖𓇋𓏏𓈖", dates: "c. 1380 – 1334 BCE", dynasty: "18th Dynasty", title: "The Heretic King", fact: "Abandoned Egypt's old gods to worship only the Aten (sun disc). Built a brand-new capital city, Amarna, and was married to the famous Nefertiti.", color: "#E8C36E" },
+  { name: "Nefertiti", glyph: "𓄤𓆑𓂋𓏏𓇋𓇋𓏏𓇋", dates: "c. 1370 – 1330 BCE", dynasty: "18th Dynasty", title: "The Beautiful One Has Come", fact: "Queen alongside Akhenaten, possibly co-ruler. Her painted limestone bust, found in 1912, is one of the most copied works of ancient art.", color: "#B8552E" },
+  { name: "Thutmose III", glyph: "𓅝𓄟𓋴", dates: "c. 1481 – 1425 BCE", dynasty: "18th Dynasty", title: "The Napoleon of Egypt", fact: "Led 17 military campaigns and expanded Egypt to its largest size ever. Never lost a battle in over 50 years of campaigning.", color: "#2E5C8A" },
+];
+
+window.LESSONS = [
+  { id: 1, title: "What is a hieroglyph?", duration: "3 min", icon: "𓂀", summary: "The basics — pictures that became writing.", content: [{ type: "p", text: "Around 3200 BCE, Egyptian scribes invented one of the world's first writing systems. They called it medu netjer — 'words of the gods.'" }, { type: "p", text: "Each picture, called a hieroglyph, could mean three different things: a sound, an idea, or a hint about what the surrounding word means." }, { type: "showcase", glyphs: ["𓂀", "𓅓", "𓇳", "𓉐"], caption: "Eye, owl, sun, house — each one is both a picture AND a sound." }, { type: "p", text: "Scribes carved them on tomb walls, painted them on coffins, and brushed them onto papyrus scrolls. For over 3,000 years, only specially trained scribes could read them." }] },
+  { id: 2, title: "The 24 sound signs", duration: "5 min", icon: "𓄿", summary: "Hieroglyphs that work like letters of an alphabet.", content: [{ type: "p", text: "Most of the 1,000+ hieroglyphs are complex symbols, but 24 special signs work like our alphabet — each one stands for a single consonant sound." }, { type: "p", text: "Egyptian writing usually skipped vowels (like writing 'CT' for 'CAT'). When we translate English names today, we use these 24 signs to spell out the sounds." }, { type: "showcase", glyphs: ["𓄿", "𓃀", "𓂧", "𓆑", "𓅓", "𓈖", "𓂋", "𓏏"], caption: "Eight of the 24 uniliteral signs." }, { type: "tip", text: "Try the Alphabet tab to see all 24 — tap any glyph to hear its sound." }] },
+  { id: 3, title: "Reading direction", duration: "2 min", icon: "𓅓", summary: "Which way does it read? Look at the animals.", content: [{ type: "p", text: "Hieroglyphs can be read right-to-left, left-to-right, or even top-to-bottom — Egyptian scribes were flexible." }, { type: "p", text: "The secret: look at which way the animals and people face. They always face the START of the line. If the owl looks left, you read left-to-right toward where it's looking from." }, { type: "showcase", glyphs: ["𓅓", "𓆑", "𓃭"], caption: "These animals face left — so this line reads LEFT to RIGHT." }] },
+  { id: 4, title: "The cartouche", duration: "4 min", icon: "𓍷", summary: "The oval loop that protects a royal name.", content: [{ type: "p", text: "When scribes wrote a pharaoh's name, they drew an oval loop around it — called a cartouche. The loop was meant to magically protect the name from harm." }, { type: "p", text: "It was the discovery of cartouches on the Rosetta Stone that let scholars finally crack the hieroglyphic code in 1822." }, { type: "showcase", glyphs: ["𓍷"], caption: "An empty cartouche, ready for a royal name." }, { type: "tip", text: "Try the Cartouche tab to make your own name in a royal oval." }] },
+  { id: 5, title: "Sacred symbols", duration: "4 min", icon: "𓋹", summary: "Ankh, Eye of Horus, scarab — what they meant.", content: [{ type: "p", text: "Some hieroglyphs weren't just letters — they were sacred symbols carried as amulets and painted on tombs for protection in the afterlife." }, { type: "glyphCard", glyph: "𓋹", title: "Ankh", text: "Life. The key of life, held by gods to grant immortality." }, { type: "glyphCard", glyph: "𓂀", title: "Eye of Horus", text: "Protection and healing. The eye Horus lost battling his uncle Set." }, { type: "glyphCard", glyph: "𓆣", title: "Scarab", text: "Rebirth. The beetle that rolls the sun across the sky each day." }, { type: "glyphCard", glyph: "𓊽", title: "Djed", text: "Stability. The spine of the god Osiris." }] },
+  { id: 6, title: "Cracking the code", duration: "5 min", icon: "𓊪", summary: "How Champollion decoded hieroglyphs from a stone.", content: [{ type: "p", text: "By 200 CE, no one on Earth could read hieroglyphs anymore. The knowledge was lost for 1,600 years." }, { type: "p", text: "In 1799, Napoleon's soldiers found a black stone near Rosetta, Egypt. It had the same text carved three times: in Greek, in Demotic, and in hieroglyphs." }, { type: "p", text: "A young Frenchman, Jean-François Champollion, spent 14 years comparing them. In 1822 he cracked it — starting with the cartouche containing the name 'PTOLEMY.'" }, { type: "showcase", glyphs: ["𓊪", "𓏏", "𓍯", "𓃭", "𓐝", "𓇋", "𓋴"], caption: "P-T-O-L-M-Y-S — the cartouche that started it all." }] },
+];
+
+window.PRACTICE_DECK = [
+  { glyph: "𓄿", answer: "A", options: ["A", "E", "I", "O"] },
+  { glyph: "𓅓", answer: "M", options: ["M", "N", "W", "B"] },
+  { glyph: "𓈖", answer: "N", options: ["N", "M", "S", "R"] },
+  { glyph: "𓂋", answer: "R", options: ["R", "L", "D", "T"] },
+  { glyph: "𓏏", answer: "T", options: ["T", "B", "P", "D"] },
+  { glyph: "𓆑", answer: "F", options: ["F", "V", "P", "B"] },
+  { glyph: "𓊪", answer: "P", options: ["P", "B", "T", "K"] },
+  { glyph: "𓋴", answer: "S", options: ["S", "Z", "X", "T"] },
+  { glyph: "𓎡", answer: "K", options: ["K", "G", "Q", "C"] },
+  { glyph: "𓇋", answer: "I", options: ["I", "E", "Y", "A"] },
+  { glyph: "𓅱", answer: "W", options: ["W", "U", "O", "V"] },
+  { glyph: "𓃭", answer: "L", options: ["L", "R", "N", "M"] },
+  { glyph: "𓂧", answer: "D", options: ["D", "T", "B", "P"] },
+  { glyph: "𓃀", answer: "B", options: ["B", "P", "D", "F"] },
+  { glyph: "𓇌", answer: "Y", options: ["Y", "I", "E", "J"] },
+];
+
+window.DAILY_GLYPHS = [
+  { glyph: "𓋹", name: "Ankh",    meaning: "Life",           fact: "Carried by gods as a key — said to unlock the door to the afterlife." },
+  { glyph: "𓂀", name: "Wedjat",  meaning: "Eye of Horus",   fact: "Each part of the eye stood for a fraction — 1/2, 1/4, 1/8, all the way to 1/64." },
+  { glyph: "𓆣", name: "Kheper",  meaning: "Scarab beetle",  fact: "Egyptians saw beetles rolling dung balls and imagined the sun being rolled across the sky." },
+  { glyph: "𓊽", name: "Djed",    meaning: "Stability",      fact: "Represented the backbone of the god Osiris — symbol of standing firm." },
+  { glyph: "𓇳", name: "Ra",      meaning: "The sun",        fact: "The sun god sailed across the sky in a golden boat by day and fought the serpent Apophis by night." },
+  { glyph: "𓅃", name: "Heru",    meaning: "Horus",          fact: "The falcon god of the sky — his right eye was the sun, his left eye the moon." },
+  { glyph: "𓉔", name: "Per",     meaning: "House",          fact: "Combined with 'great' (aa), per-aa became 'pharaoh' — literally 'great house.'" },
+  { glyph: "𓍷", name: "Shen",    meaning: "Cartouche",      fact: "An endless loop of rope — symbolizing eternal protection around a royal name." },
+  { glyph: "𓄤", name: "Nefer",   meaning: "Beautiful",      fact: "Also meant 'good' and 'perfect' — the root of names like Nefertiti and Nefertari." },
+  { glyph: "𓊵", name: "Hotep",   meaning: "Peace",          fact: "An offering table piled with bread — meant 'at peace,' 'satisfied,' or 'offering.'" },
+  { glyph: "𓌀", name: "Was",     meaning: "Power",          fact: "A scepter held by gods — topped with the head of a mysterious animal no one has identified." },
+  { glyph: "𓇼", name: "Seba",    meaning: "Star",           fact: "Egyptians believed the stars were the souls of pharaohs sailing through the night sky." },
+];
+
+window.translateToGlyphs = function(input) {
+  const text = (input || "").toUpperCase();
+  const tokens = [];
+  const words = text.split(/(\s+|[^\w])/);
+  for (const word of words) {
+    if (!word) continue;
+    if (/^\s+$/.test(word)) { tokens.push({ char: " ", glyph: " ", name: "space", type: "space" }); continue; }
+    if (/^[^\w]$/.test(word)) { tokens.push({ char: word, glyph: word, name: "punctuation", type: "punct" }); continue; }
+    const wordMatch = window.WORD_GLYPHS.find(w => w.word === word);
+    if (wordMatch) { tokens.push({ char: word.toLowerCase(), glyph: wordMatch.glyph, name: wordMatch.meaning, type: "word" }); continue; }
+    let i = 0;
+    while (i < word.length) {
+      const two = word.slice(i, i + 2);
+      const dig = window.DIGRAPHS.find(d => d.seq === two);
+      if (dig) { tokens.push({ char: two.toLowerCase(), glyph: dig.glyph, name: dig.name, type: "digraph" }); i += 2; continue; }
+      const ch = word[i];
+      const letter = window.ALPHABET.find(a => a.letter === ch);
+      if (letter) { tokens.push({ char: ch.toLowerCase(), glyph: letter.glyph, name: letter.name, type: "letter" }); }
+      else if (/\d/.test(ch)) { tokens.push({ char: ch, glyph: ch, name: "number", type: "num" }); }
+      else { tokens.push({ char: ch, glyph: "·", name: "unknown", type: "unknown" }); }
+      i += 1;
+    }
+  }
+  return tokens;
+};
+
+window.translateFromGlyphs = function(input) {
+  if (!input) return "";
+  const tokens = Array.from(input);
+  let out = "";
+  for (const ch of tokens) {
+    if (/\s/.test(ch)) { out += " "; continue; }
+    const word = window.WORD_GLYPHS.find(w => w.glyph === ch);
+    if (word) { out += word.word.toLowerCase() + " "; continue; }
+    const letter = window.ALPHABET.find(a => a.glyph === ch);
+    if (letter) { out += letter.letter.toLowerCase(); continue; }
+    const dig = window.DIGRAPHS.find(d => d.glyph === ch);
+    if (dig) { out += dig.seq.toLowerCase(); continue; }
+    out += "?";
+  }
+  return out.trim();
+};
+
+window.getDailyGlyph = function() {
+  const now = new Date();
+  const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+  return window.DAILY_GLYPHS[dayOfYear % window.DAILY_GLYPHS.length];
+};
+</script>
+
+<!-- Tweaks panel -->
+<script type="text/babel">
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+  .twk-chips{display:flex;gap:6px}
+  .twk-chip{position:relative;appearance:none;flex:1;min-width:0;height:46px;
+    padding:0;border:0;border-radius:6px;overflow:hidden;cursor:default;
+    box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);transition:transform .12s}
+  .twk-chip[data-on="1"]{box-shadow:0 0 0 1.5px rgba(0,0,0,.85),0 2px 6px rgba(0,0,0,.15)}
+  .twk-chip svg{position:absolute;top:6px;left:6px;width:13px;height:13px;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+`;
+
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+  }, []);
+  return [values, setTweak];
+}
+
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd"><b>{title}</b><button className="twk-x" onClick={() => setOpen(false)}>✕</button></div>
+        <div className="twk-body">{children}</div>
+      </div>
+    </>
+  );
+}
+
+function TweakSection({ label, children }) {
+  return (<><div className="twk-sect">{label}</div>{children}</>);
+}
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <div className="twk-row">
+      <div className="twk-lbl"><span>{label}</span><span>{value}{unit}</span></div>
+      <input type="range" className="twk-slider" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </div>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'} onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakColor({ label, value, options, onChange }) {
+  if (!options || !options.length) {
+    return (<div className="twk-row twk-row-h"><div className="twk-lbl"><span>{label}</span></div><input type="color" value={value} onChange={(e) => onChange(e.target.value)} /></div>);
+  }
+  const cur = String(JSON.stringify(value)).toLowerCase();
+  return (
+    <div className="twk-row">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <div className="twk-chips">
+        {options.map((o, i) => {
+          const hero = Array.isArray(o) ? o[0] : o;
+          const on = String(JSON.stringify(o)).toLowerCase() === cur;
+          return (
+            <button key={i} type="button" className="twk-chip" data-on={on ? '1' : '0'} style={{ background: hero }} onClick={() => onChange(o)}>
+              {on && <svg viewBox="0 0 14 14"><path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" stroke="#fff"/></svg>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { useTweaks, TweaksPanel, TweakSection, TweakSlider, TweakToggle, TweakColor });
+</script>
+
+<!-- Translate + Cartouche + Daily Glyph screens -->
+<script type="text/babel">
+function DailyGlyphCard() {
+  const daily = React.useMemo(() => window.getDailyGlyph(), []);
+  return (
+    <div className="daily-card surface-stone" style={dailyStyles.card}>
+      <div style={dailyStyles.left}>
+        <div className="h-eyebrow">Glyph of the day</div>
+        <div style={dailyStyles.name}>{daily.name}</div>
+        <div style={dailyStyles.meaning}>"{daily.meaning}"</div>
+        <div style={dailyStyles.fact}>{daily.fact}</div>
+      </div>
+      <div style={dailyStyles.right}>
+        <div className="glyph glyph-glow" style={dailyStyles.bigGlyph}>{daily.glyph}</div>
+      </div>
+    </div>
+  );
+}
+
+const dailyStyles = {
+  card: { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 32, padding: "28px 32px", marginBottom: 28, overflow: "hidden" },
+  left: { display: "flex", flexDirection: "column", gap: 6, maxWidth: 520 },
+  name: { fontFamily: "var(--font-display)", fontSize: 32, fontWeight: 700, color: "var(--papyrus)", marginTop: 8, letterSpacing: "0.06em" },
+  meaning: { fontStyle: "italic", color: "var(--gold-bright)", fontSize: 16, marginBottom: 8 },
+  fact: { color: "var(--text-dim)", fontSize: 14, lineHeight: 1.55 },
+  right: { paddingLeft: 24 },
+  bigGlyph: { fontSize: 120, color: "var(--gold-bright)" },
+};
+
+function Translator() {
+  const [direction, setDirection] = React.useState("toGlyph");
+  const [input, setInput] = React.useState("");
+  const [hovered, setHovered] = React.useState(null);
+  const [copied, setCopied] = React.useState(false);
+
+  const shown = direction === "toGlyph" ? window.translateToGlyphs(input) : [];
+  const englishOut = direction === "toEnglish" ? window.translateFromGlyphs(input) : "";
+
+  const handleCopy = async () => {
+    const text = direction === "toGlyph" ? window.translateToGlyphs(input).map(t => t.glyph).join("") : englishOut;
+    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch {}
+  };
+
+  const speak = (text) => {
+    try { const u = new SpeechSynthesisUtterance(text); u.rate = 0.85; u.pitch = 0.9; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch {}
+  };
+
+  return (
+    <div className="surface-stone fade-up" style={tStyles.wrap}>
+      <div style={tStyles.header}>
+        <div className="h-eyebrow">Translator</div>
+        <div style={tStyles.directionToggle}>
+          <button onClick={() => { setDirection("toGlyph"); setInput(""); }} style={{...tStyles.dirBtn, ...(direction === "toGlyph" ? tStyles.dirBtnActive : {})}}>English <span style={tStyles.arrow}>→</span> <span className="glyph">𓂀</span></button>
+          <button onClick={() => { setDirection("toEnglish"); setInput(""); }} style={{...tStyles.dirBtn, ...(direction === "toEnglish" ? tStyles.dirBtnActive : {})}}><span className="glyph">𓂀</span> <span style={tStyles.arrow}>→</span> English</button>
+        </div>
+      </div>
+      <div style={tStyles.body}>
+        <div>
+          <label className="small-caps" style={{marginBottom: 8, display: "block"}}>{direction === "toGlyph" ? "Type in English" : "Paste hieroglyphs"}</label>
+          <textarea className="textarea" placeholder={direction === "toGlyph" ? "Try your name, or 'pharaoh ankh life'..." : "Paste 𓋹 𓄿 𓅓 ..."} value={input} onChange={(e) => setInput(e.target.value)} maxLength={direction === "toGlyph" ? 80 : 200} style={tStyles.textarea}/>
+          <div style={tStyles.inputFoot}>
+            <span className="muted" style={{fontSize: 12}}>{direction === "toGlyph" ? `${input.length}/80 characters` : "Try copying glyphs from any other tab"}</span>
+            {input && <button onClick={() => setInput("")} style={tStyles.clearBtn}>clear</button>}
+          </div>
+        </div>
+        <div>
+          <div style={tStyles.outputLabel}>
+            <span className="small-caps">Output</span>
+            {(shown.length > 0 || englishOut) && (
+              <div style={{display: "flex", gap: 8}}>
+                <button className="btn-ghost" style={tStyles.smallBtn} onClick={() => speak(direction === "toGlyph" ? input : englishOut)}><span style={{fontSize: 14}}>🔊</span> SPEAK</button>
+                <button className="btn-ghost" style={tStyles.smallBtn} onClick={handleCopy}>{copied ? "✓ COPIED" : "COPY"}</button>
+              </div>
+            )}
+          </div>
+          {direction === "toGlyph" ? (
+            <div style={tStyles.glyphOut}>
+              {shown.length === 0 && !input && <div style={tStyles.placeholder}>Your message will appear here in ancient glyphs.</div>}
+              <div style={tStyles.glyphLine}>
+                {shown.map((tok, idx) => {
+                  if (tok.type === "space") return <span key={idx} style={{display:"inline-block", width: 24}}/>;
+                  if (tok.type === "punct") return <span key={idx} style={tStyles.punct}>{tok.glyph}</span>;
+                  return (
+                    <button key={idx} style={{...tStyles.glyphCell, animationDelay: `${idx * 70}ms`, ...(hovered === idx ? tStyles.glyphCellHover : {})}}
+                      onMouseEnter={() => setHovered(idx)} onMouseLeave={() => setHovered(null)}
+                      onClick={() => speak(tok.char)} title={`${tok.char.toUpperCase()} · ${tok.name}`}>
+                      <span className="glyph" style={tStyles.glyphChar}>{tok.glyph}</span>
+                      <span style={tStyles.glyphSub}>{tok.char.toUpperCase()}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {hovered !== null && shown[hovered] && shown[hovered].type !== "space" && (
+                <div style={tStyles.glyphHint}>
+                  <span className="glyph" style={{fontSize: 24, color: "var(--gold-bright)"}}>{shown[hovered].glyph}</span>
+                  <span style={{fontWeight: 600, color: "var(--papyrus)"}}>{shown[hovered].name}</span>
+                  <span style={{color: "var(--text-mute)"}}>· {shown[hovered].type === "word" ? "sacred word" : "phonetic"}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={tStyles.englishOut}>
+              {englishOut ? <div style={tStyles.englishText}>{englishOut}</div> : <div style={tStyles.placeholder}>Paste hieroglyphs above to decode them.</div>}
+            </div>
+          )}
+        </div>
+      </div>
+      {direction === "toGlyph" && !input && (
+        <div style={tStyles.samples}>
+          <span className="small-caps" style={{marginRight: 8}}>Try:</span>
+          {["ANKH", "RAMSES", "HORUS RA", "MY NAME IS", "NEFER HOTEP"].map(s => (
+            <button key={s} style={tStyles.chip} onClick={() => setInput(s)}>{s}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const tStyles = {
+  wrap: { padding: "28px 32px", marginBottom: 28 },
+  header: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 22, paddingBottom: 18, borderBottom: "1px solid var(--hairline)" },
+  directionToggle: { display: "flex", background: "var(--bg-deep)", borderRadius: 10, padding: 4, border: "1px solid var(--hairline)" },
+  dirBtn: { padding: "10px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-mute)", background: "transparent", border: "none", borderRadius: 7, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s" },
+  dirBtnActive: { background: "linear-gradient(180deg, rgba(212,162,76,0.15), rgba(212,162,76,0.05))", color: "var(--papyrus)", boxShadow: "inset 0 0 0 1px var(--hairline-strong)" },
+  arrow: { color: "var(--gold)", opacity: 0.7 },
+  body: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 },
+  textarea: { fontSize: 18, letterSpacing: "0.04em" },
+  inputFoot: { display: "flex", justifyContent: "space-between", marginTop: 8 },
+  clearBtn: { fontSize: 11, color: "var(--text-mute)", letterSpacing: "0.1em", textTransform: "uppercase" },
+  outputLabel: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  smallBtn: { padding: "6px 12px", fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", borderRadius: 6, background: "transparent", color: "var(--text-dim)", boxShadow: "inset 0 0 0 1px var(--hairline)", display: "flex", alignItems: "center", gap: 4 },
+  glyphOut: { minHeight: 180, background: "linear-gradient(180deg, #2a1f10, #1a140a)", borderRadius: 12, border: "1px solid var(--hairline)", padding: 24, position: "relative", boxShadow: "inset 0 2px 8px rgba(0,0,0,0.4)" },
+  glyphLine: { display: "flex", flexWrap: "wrap", gap: 6, alignItems: "flex-end" },
+  glyphCell: { display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "8px 6px", borderRadius: 8, background: "transparent", border: "1px solid transparent", transition: "all 0.15s", animation: "glyphCarveIn 0.45s ease-out backwards", cursor: "pointer" },
+  glyphCellHover: { background: "rgba(212, 162, 76, 0.08)", borderColor: "var(--hairline-strong)" },
+  glyphChar: { fontSize: 44, color: "var(--gold-bright)", textShadow: "0 0 12px rgba(232,195,110,0.3)" },
+  glyphSub: { fontSize: 10, color: "var(--text-mute)", marginTop: 4, letterSpacing: "0.1em" },
+  punct: { fontSize: 28, color: "var(--text-dim)", padding: "0 4px" },
+  placeholder: { color: "var(--text-faint)", fontStyle: "italic", padding: "40px 0", textAlign: "center" },
+  glyphHint: { marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--hairline)", display: "flex", alignItems: "center", gap: 10, fontSize: 13 },
+  englishOut: { minHeight: 180, background: "linear-gradient(180deg, #2a1f10, #1a140a)", borderRadius: 12, border: "1px solid var(--hairline)", padding: 24, boxShadow: "inset 0 2px 8px rgba(0,0,0,0.4)" },
+  englishText: { fontSize: 28, color: "var(--papyrus)", letterSpacing: "0.03em", fontFamily: "var(--font-display)", fontWeight: 600 },
+  samples: { marginTop: 22, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 },
+  chip: { padding: "6px 12px", fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", color: "var(--text-dim)", background: "rgba(212, 162, 76, 0.05)", border: "1px solid var(--hairline)", borderRadius: 999, cursor: "pointer", transition: "all 0.15s" },
+};
+
+function Cartouche() {
+  const [name, setName] = React.useState("");
+  const [orientation, setOrientation] = React.useState("vertical");
+  const tokens = window.translateToGlyphs(name).filter(t => t.type !== "space" && t.type !== "punct");
+
+  const handleShareImage = async () => {
+    const svg = document.querySelector("#cartouche-svg");
+    if (!svg) return;
+    const xml = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([xml], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const scale = 2;
+      canvas.width = svg.clientWidth * scale;
+      canvas.height = svg.clientHeight * scale;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#0E0A05";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `cartouche-${name || "royal"}.png`; a.click(); });
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  };
+
+  return (
+    <div className="surface-stone fade-up" style={cStyles.wrap}>
+      <div style={cStyles.header}>
+        <div className="h-eyebrow">Royal Cartouche</div>
+        <h2 style={cStyles.title}>Your name in pharaoh's writing</h2>
+        <p style={cStyles.sub}>A cartouche is the oval rope-loop scribes drew around royal names — a magical protection that locked the name inside.</p>
+      </div>
+      <div style={cStyles.body}>
+        <div style={cStyles.controls}>
+          <label className="small-caps" style={{display: "block", marginBottom: 8}}>Enter a name</label>
+          <input className="input" placeholder="e.g. ALEX" value={name} onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 14))} style={{fontSize: 22, letterSpacing: "0.1em", textAlign: "center", fontFamily: "var(--font-display)"}}/>
+          <div style={{marginTop: 22}}>
+            <label className="small-caps" style={{display: "block", marginBottom: 8}}>Orientation</label>
+            <div style={cStyles.toggle}>
+              <button onClick={() => setOrientation("vertical")} style={{...cStyles.tBtn, ...(orientation === "vertical" ? cStyles.tBtnA : {})}}>▌ Vertical</button>
+              <button onClick={() => setOrientation("horizontal")} style={{...cStyles.tBtn, ...(orientation === "horizontal" ? cStyles.tBtnA : {})}}>▬ Horizontal</button>
+            </div>
+          </div>
+          {name && (
+            <div style={cStyles.actions}>
+              <button className="btn btn-primary" onClick={handleShareImage}>⬇ Save as image</button>
+              <button className="btn btn-ghost" onClick={() => window.print()}>Print</button>
+            </div>
+          )}
+          {name && (
+            <div style={cStyles.breakdown}>
+              <div className="small-caps" style={{marginBottom: 10}}>Letter by letter</div>
+              {tokens.map((t, i) => (
+                <div key={i} style={cStyles.bdRow}>
+                  <span style={cStyles.bdLetter}>{t.char.toUpperCase()}</span>
+                  <span className="glyph" style={cStyles.bdGlyph}>{t.glyph}</span>
+                  <span style={cStyles.bdName}>{t.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div style={cStyles.display}>
+          <CartoucheSvg tokens={tokens} orientation={orientation}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CartoucheSvg({ tokens, orientation }) {
+  const isVert = orientation === "vertical";
+  const w = isVert ? 320 : 640;
+  const h = isVert ? 640 : 280;
+  const padTop = isVert ? 40 : 30;
+  const padBottom = padTop;
+  const innerH = h - padTop - padBottom - 20;
+  const innerW = w - 60;
+  return (
+    <svg id="cartouche-svg" viewBox={`0 0 ${w} ${h}`} style={{width: "100%", maxWidth: w, height: "auto"}}>
+      <defs>
+        <linearGradient id="cartGold" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#E8C36E"/><stop offset="50%" stopColor="#D4A24C"/><stop offset="100%" stopColor="#8C6A2A"/>
+        </linearGradient>
+        <linearGradient id="cartFill" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#2A1F0E"/><stop offset="100%" stopColor="#1A140A"/>
+        </linearGradient>
+        <filter id="cartGlow"><feGaussianBlur stdDeviation="3"/></filter>
+      </defs>
+      <ellipse cx={w/2} cy={h-padBottom/2+6} rx={isVert?100:280} ry="8" fill="rgba(0,0,0,0.5)" filter="url(#cartGlow)"/>
+      {isVert ? (
+        <g>
+          <rect x="30" y={padTop} width={w-60} height={h-padTop-padBottom-20} rx={(w-60)/2} ry={(w-60)/2} fill="url(#cartFill)" stroke="url(#cartGold)" strokeWidth="6"/>
+          <rect x="30" y={padTop} width={w-60} height={h-padTop-padBottom-20} rx={(w-60)/2} ry={(w-60)/2} fill="none" stroke="#5D4220" strokeWidth="1.5"/>
+          <rect x="20" y={h-padBottom-20} width={w-40} height="14" rx="3" fill="url(#cartGold)" stroke="#5D4220" strokeWidth="1"/>
+          <line x1="30" y1={h-padBottom-13} x2={w-30} y2={h-padBottom-13} stroke="rgba(0,0,0,0.3)" strokeWidth="1"/>
+        </g>
+      ) : (
+        <g>
+          <rect x={padTop} y="30" width={w-padTop*2} height={h-60} rx={(h-60)/2} ry={(h-60)/2} fill="url(#cartFill)" stroke="url(#cartGold)" strokeWidth="6"/>
+          <rect x={padTop} y="30" width={w-padTop*2} height={h-60} rx={(h-60)/2} ry={(h-60)/2} fill="none" stroke="#5D4220" strokeWidth="1.5"/>
+          <rect x={w-padTop-3} y="20" width="14" height={h-40} rx="3" fill="url(#cartGold)" stroke="#5D4220" strokeWidth="1"/>
+        </g>
+      )}
+      {tokens.length > 0 && (isVert ? (() => {
+        const n = tokens.length;
+        const cellH = Math.min(innerH / Math.max(n, 1), 80);
+        const totalH = cellH * n;
+        const startY = padTop + (innerH - totalH) / 2 + cellH * 0.75;
+        return tokens.map((t, i) => (
+          <text key={i} x={w/2} y={startY + i * cellH} textAnchor="middle" style={{fontFamily: "Noto Sans Egyptian Hieroglyphs, serif", fontSize: Math.min(cellH * 0.85, 64)}} fill="#E8C36E">{t.glyph}</text>
+        ));
+      })() : (() => {
+        const n = tokens.length;
+        const cellW = Math.min((w - padTop*2 - 40) / Math.max(n, 1), 80);
+        const totalW = cellW * n;
+        const startX = (w - totalW) / 2 + cellW / 2;
+        return tokens.map((t, i) => (
+          <text key={i} x={startX + i * cellW} y={h/2 + 22} textAnchor="middle" style={{fontFamily: "Noto Sans Egyptian Hieroglyphs, serif", fontSize: Math.min(cellW * 0.85, 64)}} fill="#E8C36E">{t.glyph}</text>
+        ));
+      })())}
+      {tokens.length === 0 && (
+        <text x={w/2} y={h/2} textAnchor="middle" fill="#5D5135" fontSize="14" fontFamily="Cinzel" letterSpacing="3">enter a name</text>
+      )}
+    </svg>
+  );
+}
+
+const cStyles = {
+  wrap: { padding: "28px 32px", marginBottom: 28 },
+  header: { marginBottom: 28 },
+  title: { fontFamily: "var(--font-display)", fontSize: 28, color: "var(--papyrus)", margin: "8px 0", letterSpacing: "0.04em" },
+  sub: { color: "var(--text-dim)", fontSize: 14, maxWidth: 580, lineHeight: 1.55 },
+  body: { display: "grid", gridTemplateColumns: "minmax(280px, 360px) 1fr", gap: 36, alignItems: "start" },
+  controls: { display: "flex", flexDirection: "column" },
+  toggle: { display: "flex", gap: 6, background: "var(--bg-deep)", padding: 4, borderRadius: 8, border: "1px solid var(--hairline)" },
+  tBtn: { flex: 1, padding: "10px 12px", fontSize: 12, fontWeight: 600, color: "var(--text-mute)", borderRadius: 6, letterSpacing: "0.1em", textTransform: "uppercase" },
+  tBtnA: { background: "rgba(212,162,76,0.15)", color: "var(--papyrus)", boxShadow: "inset 0 0 0 1px var(--hairline-strong)" },
+  actions: { display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" },
+  breakdown: { marginTop: 28, paddingTop: 20, borderTop: "1px solid var(--hairline)" },
+  bdRow: { display: "grid", gridTemplateColumns: "32px 48px 1fr", alignItems: "center", gap: 12, padding: "6px 0" },
+  bdLetter: { fontFamily: "var(--font-display)", fontWeight: 700, color: "var(--gold)", letterSpacing: "0.1em" },
+  bdGlyph: { fontFamily: "var(--font-glyph)", fontSize: 28, color: "var(--gold-bright)" },
+  bdName: { fontSize: 13, color: "var(--text-mute)" },
+  display: { background: "radial-gradient(ellipse at center, rgba(212,162,76,0.08), transparent 70%)", minHeight: 480, display: "grid", placeItems: "center", padding: 24 },
+};
+
+Object.assign(window, { DailyGlyphCard, Translator, Cartouche });
+</script>
+
+<!-- Learn screens: Alphabet · Lessons · Pharaohs -->
+<script type="text/babel">
+function Alphabet() {
+  const [selected, setSelected] = React.useState(null);
+  const speak = (text) => { try { const u = new SpeechSynthesisUtterance(text); u.rate = 0.85; u.pitch = 0.95; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch {} };
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div className="h-eyebrow">Reference</div>
+        <h1 className="page-title">The Egyptian Alphabet</h1>
+        <p className="page-subtitle">24 hieroglyphs that work like letters. Tap any sign to hear its sound, see its meaning, and learn the picture behind the letter.</p>
+      </div>
+      <div style={aStyles.grid}>
+        {window.ALPHABET.map((a, i) => (
+          <button key={a.letter} onClick={() => { setSelected(a); speak(a.sound); }}
+            style={{...aStyles.tile, ...(selected?.letter === a.letter ? aStyles.tileActive : {}), animation: `glyphCarveIn 0.5s ease-out ${i * 0.02}s backwards`}}>
+            <div style={aStyles.tileLetter}>{a.letter}</div>
+            <div className="glyph" style={aStyles.tileGlyph}>{a.glyph}</div>
+            <div style={aStyles.tileSound}>/{a.sound}/</div>
+          </button>
+        ))}
+      </div>
+      {selected && (
+        <div className="surface-stone fade-up" style={aStyles.detail}>
+          <div style={aStyles.detailLeft}><div className="glyph glyph-glow" style={aStyles.detailGlyph}>{selected.glyph}</div></div>
+          <div style={aStyles.detailRight}>
+            <div className="h-eyebrow">Letter {selected.letter}</div>
+            <h2 style={aStyles.detailName}>{selected.name}</h2>
+            <div style={aStyles.detailSound}>Sounds like <span style={{color: "var(--gold-bright)", fontWeight: 600}}>/{selected.sound}/</span></div>
+            <p style={aStyles.detailHint}>{selected.hint}</p>
+            <div style={aStyles.detailActions}>
+              <button className="btn btn-primary" onClick={() => speak(selected.sound)}>🔊 Hear it</button>
+              <button className="btn btn-ghost" onClick={() => setSelected(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div style={aStyles.note}>
+        <div className="h-eyebrow" style={{marginBottom: 8}}>A note for scholars</div>
+        <p style={{color: "var(--text-dim)", fontSize: 14, lineHeight: 1.6, maxWidth: 720}}>Real ancient Egyptian had no letters for vowels (E, O, U) — scribes wrote only consonants. Modern translators map English vowels to the closest matching glyphs (𓇋 for E/I, 𓅱 for O/U/W) so names and messages can be written phonetically. This is how Egyptologists transliterate names like "Cleopatra" into cartouches.</p>
+      </div>
+    </div>
+  );
+}
+
+const aStyles = {
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 12 },
+  tile: { background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 12, padding: "16px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer", transition: "all 0.18s", position: "relative" },
+  tileActive: { background: "linear-gradient(180deg, rgba(212,162,76,0.18), rgba(212,162,76,0.06))", borderColor: "var(--gold)", boxShadow: "0 0 0 3px rgba(212,162,76,0.15), 0 8px 24px rgba(212,162,76,0.2)", transform: "translateY(-2px)" },
+  tileLetter: { fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: "var(--gold)", letterSpacing: "0.1em" },
+  tileGlyph: { fontSize: 48, color: "var(--papyrus)", margin: "4px 0" },
+  tileSound: { fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-mute)" },
+  detail: { marginTop: 32, padding: "32px 40px", display: "grid", gridTemplateColumns: "auto 1fr", gap: 40, alignItems: "center" },
+  detailLeft: { minWidth: 160, display: "grid", placeItems: "center" },
+  detailGlyph: { fontSize: 140, color: "var(--gold-bright)" },
+  detailRight: { display: "flex", flexDirection: "column", gap: 8 },
+  detailName: { fontFamily: "var(--font-display)", fontSize: 36, color: "var(--papyrus)", letterSpacing: "0.04em", margin: "4px 0" },
+  detailSound: { color: "var(--text-dim)", fontSize: 16 },
+  detailHint: { color: "var(--text-dim)", fontSize: 15, lineHeight: 1.55, marginTop: 8 },
+  detailActions: { display: "flex", gap: 10, marginTop: 18 },
+  note: { marginTop: 48, padding: "24px 28px", borderLeft: "2px solid var(--gold-deep)", background: "rgba(212,162,76,0.03)", borderRadius: "0 12px 12px 0" },
+};
+
+function Lessons() {
+  const [openId, setOpenId] = React.useState(null);
+  const [completed, setCompleted] = React.useState(() => { try { return JSON.parse(localStorage.getItem("medu-completed") || "[]"); } catch { return []; } });
+  const toggleDone = (id) => {
+    setCompleted(prev => { const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]; try { localStorage.setItem("medu-completed", JSON.stringify(next)); } catch {} return next; });
+  };
+  const open = window.LESSONS.find(l => l.id === openId);
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div className="h-eyebrow">Lessons</div>
+        <h1 className="page-title">From scratch to scribe</h1>
+        <p className="page-subtitle">Six short lessons. By the end you'll know how hieroglyphs work, how to read them, and how they were finally cracked after 1,600 years of silence.</p>
+      </div>
+      <div style={lStyles.progress}>
+        <div style={lStyles.progressBar}><div style={{...lStyles.progressFill, width: `${(completed.length / window.LESSONS.length) * 100}%`}}/></div>
+        <div style={lStyles.progressLabel}>{completed.length} of {window.LESSONS.length} complete</div>
+      </div>
+      <div style={lStyles.grid}>
+        {window.LESSONS.map((lesson, i) => {
+          const isDone = completed.includes(lesson.id);
+          return (
+            <button key={lesson.id} onClick={() => setOpenId(lesson.id)}
+              style={{...lStyles.card, ...(isDone ? lStyles.cardDone : {}), animation: `fadeUp 0.4s ease-out ${i * 0.05}s backwards`}}>
+              <div style={lStyles.cardNum}>{String(lesson.id).padStart(2, "0")}</div>
+              <div className="glyph" style={lStyles.cardIcon}>{lesson.icon}</div>
+              <div style={lStyles.cardBody}>
+                <div style={lStyles.cardTitle}>{lesson.title}</div>
+                <div style={lStyles.cardSummary}>{lesson.summary}</div>
+                <div style={lStyles.cardMeta}><span>{lesson.duration} read</span>{isDone && <span style={lStyles.cardDoneBadge}>✓ Done</span>}</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {open && (
+        <div style={lStyles.modalBg} onClick={() => setOpenId(null)}>
+          <div className="surface-stone" style={lStyles.modal} onClick={e => e.stopPropagation()}>
+            <div style={lStyles.modalHeader}>
+              <div>
+                <div className="h-eyebrow">Lesson {String(open.id).padStart(2, "0")} · {open.duration}</div>
+                <h2 style={lStyles.modalTitle}>{open.title}</h2>
+              </div>
+              <button onClick={() => setOpenId(null)} style={lStyles.closeBtn}>✕</button>
+            </div>
+            <div style={lStyles.modalBody}>
+              {open.content.map((block, idx) => {
+                if (block.type === "p") return <p key={idx} style={lStyles.lessonP}>{block.text}</p>;
+                if (block.type === "tip") return <div key={idx} style={lStyles.tip}><span style={{color: "var(--gold-bright)", fontWeight: 600, marginRight: 8}}>TIP:</span>{block.text}</div>;
+                if (block.type === "showcase") return (
+                  <div key={idx} style={lStyles.showcase}>
+                    <div style={lStyles.showcaseGlyphs}>{block.glyphs.map((g, gi) => <span key={gi} className="glyph" style={lStyles.showcaseGlyph}>{g}</span>)}</div>
+                    <div style={lStyles.showcaseCaption}>{block.caption}</div>
+                  </div>
+                );
+                if (block.type === "glyphCard") return (
+                  <div key={idx} style={lStyles.glyphCard}>
+                    <span className="glyph" style={lStyles.glyphCardGlyph}>{block.glyph}</span>
+                    <div><div style={lStyles.glyphCardTitle}>{block.title}</div><div style={lStyles.glyphCardText}>{block.text}</div></div>
+                  </div>
+                );
+                return null;
+              })}
+            </div>
+            <div style={lStyles.modalFooter}>
+              <button className={completed.includes(open.id) ? "btn btn-ghost" : "btn btn-primary"} onClick={() => toggleDone(open.id)}>{completed.includes(open.id) ? "✓ Completed (undo)" : "Mark complete"}</button>
+              <button className="btn btn-ghost" onClick={() => { const idx = window.LESSONS.findIndex(l => l.id === open.id); const next = window.LESSONS[idx + 1]; if (next) setOpenId(next.id); else setOpenId(null); }}>{window.LESSONS.findIndex(l => l.id === open.id) === window.LESSONS.length - 1 ? "Finish" : "Next lesson →"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const lStyles = {
+  progress: { display: "flex", alignItems: "center", gap: 16, marginBottom: 28, padding: "14px 20px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--hairline)" },
+  progressBar: { flex: 1, height: 6, background: "var(--bg-deep)", borderRadius: 3, overflow: "hidden" },
+  progressFill: { height: "100%", background: "linear-gradient(90deg, var(--gold), var(--gold-bright))", transition: "width 0.4s ease" },
+  progressLabel: { fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--text-mute)", letterSpacing: "0.1em" },
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 },
+  card: { background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 14, padding: "22px 22px 20px", textAlign: "left", cursor: "pointer", transition: "all 0.18s", display: "grid", gridTemplateColumns: "auto auto 1fr", gap: 16, alignItems: "start", position: "relative" },
+  cardDone: { borderColor: "var(--hairline-strong)", background: "linear-gradient(180deg, rgba(212,162,76,0.06), rgba(212,162,76,0.02))" },
+  cardNum: { fontFamily: "var(--font-display)", fontSize: 11, fontWeight: 600, letterSpacing: "0.18em", color: "var(--gold)", paddingTop: 4 },
+  cardIcon: { fontSize: 38, color: "var(--gold-bright)" },
+  cardBody: { display: "flex", flexDirection: "column", gap: 4 },
+  cardTitle: { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--papyrus)", letterSpacing: "0.02em" },
+  cardSummary: { color: "var(--text-dim)", fontSize: 13, lineHeight: 1.5 },
+  cardMeta: { fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-mute)", letterSpacing: "0.1em", marginTop: 8, display: "flex", gap: 12 },
+  cardDoneBadge: { color: "var(--gold-bright)" },
+  modalBg: { position: "fixed", inset: 0, background: "rgba(8, 5, 2, 0.7)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", display: "grid", placeItems: "center", zIndex: 100, padding: 20, overflowY: "auto" },
+  modal: { maxWidth: 720, width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column" },
+  modalHeader: { padding: "24px 32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--hairline)" },
+  modalTitle: { fontFamily: "var(--font-display)", fontSize: 28, color: "var(--papyrus)", letterSpacing: "0.03em", margin: "6px 0 0" },
+  closeBtn: { width: 36, height: 36, borderRadius: 8, background: "var(--bg-deep)", color: "var(--text-dim)", fontSize: 14, border: "1px solid var(--hairline)" },
+  modalBody: { padding: "24px 32px", overflowY: "auto", flex: 1 },
+  lessonP: { color: "var(--text)", fontSize: 16, lineHeight: 1.65, marginBottom: 16 },
+  tip: { background: "rgba(212,162,76,0.06)", borderLeft: "2px solid var(--gold)", padding: "12px 18px", borderRadius: "0 8px 8px 0", color: "var(--text)", fontSize: 14, margin: "16px 0", lineHeight: 1.55 },
+  showcase: { background: "var(--bg-deep)", border: "1px solid var(--hairline)", borderRadius: 12, padding: "24px 20px", margin: "20px 0", textAlign: "center" },
+  showcaseGlyphs: { display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap", marginBottom: 12 },
+  showcaseGlyph: { fontSize: 56, color: "var(--gold-bright)" },
+  showcaseCaption: { fontSize: 13, color: "var(--text-mute)", fontStyle: "italic" },
+  glyphCard: { display: "grid", gridTemplateColumns: "auto 1fr", gap: 18, alignItems: "center", padding: "16px 18px", background: "rgba(232,217,176,0.04)", borderRadius: 10, marginBottom: 10, border: "1px solid var(--hairline)" },
+  glyphCardGlyph: { fontSize: 56, color: "var(--gold-bright)" },
+  glyphCardTitle: { fontFamily: "var(--font-display)", fontSize: 18, color: "var(--papyrus)", marginBottom: 4 },
+  glyphCardText: { color: "var(--text-dim)", fontSize: 14, lineHeight: 1.5 },
+  modalFooter: { padding: "20px 32px", display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid var(--hairline)" },
+};
+
+function Pharaohs() {
+  const [selected, setSelected] = React.useState(null);
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div className="h-eyebrow">Royals</div>
+        <h1 className="page-title">The Pharaohs</h1>
+        <p className="page-subtitle">Eight rulers who shaped 3,000 years of history — boy kings, warrior queens, pyramid builders, and the woman who taught the world to read hieroglyphs.</p>
+      </div>
+      <div style={pStyles.grid}>
+        {window.PHARAOHS.map((p, i) => (
+          <button key={p.name} onClick={() => setSelected(p)} style={{...pStyles.card, animation: `fadeUp 0.4s ease-out ${i * 0.04}s backwards`}}>
+            <div style={{...pStyles.cardTop, background: `linear-gradient(135deg, ${p.color}40, transparent 70%)`}}>
+              <span className="glyph" style={pStyles.cardCartouche}>{p.glyph}</span>
+            </div>
+            <div style={pStyles.cardBody}>
+              <div style={pStyles.cardTitle}>{p.name}</div>
+              <div style={pStyles.cardDates}>{p.dates}</div>
+              <div style={{...pStyles.cardTag, color: p.color}}>{p.title}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+      {selected && (
+        <div style={pStyles.modalBg} onClick={() => setSelected(null)}>
+          <div className="surface-stone" style={pStyles.modal} onClick={e => e.stopPropagation()}>
+            <div style={{...pStyles.modalHero, background: `linear-gradient(135deg, ${selected.color}30, transparent 70%)`}}>
+              <span className="glyph glyph-glow" style={{...pStyles.modalGlyph, color: selected.color}}>{selected.glyph}</span>
+              <button onClick={() => setSelected(null)} style={pStyles.closeBtn}>✕</button>
+            </div>
+            <div style={pStyles.modalContent}>
+              <div className="h-eyebrow" style={{color: selected.color}}>{selected.dynasty} · {selected.dates}</div>
+              <h2 style={pStyles.modalName}>{selected.name}</h2>
+              <div style={pStyles.modalTitle2}>"{selected.title}"</div>
+              <p style={pStyles.modalFact}>{selected.fact}</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const pStyles = {
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 18 },
+  card: { background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 14, overflow: "hidden", textAlign: "left", cursor: "pointer", transition: "all 0.18s", padding: 0 },
+  cardTop: { height: 160, display: "grid", placeItems: "center", borderBottom: "1px solid var(--hairline)", overflow: "hidden", padding: "0 16px" },
+  cardCartouche: { fontSize: 50, color: "var(--papyrus)", textAlign: "center", lineHeight: 1.1, textShadow: "0 0 24px rgba(232,195,110,0.3)" },
+  cardBody: { padding: "16px 18px" },
+  cardTitle: { fontFamily: "var(--font-display)", fontSize: 20, color: "var(--papyrus)", letterSpacing: "0.02em" },
+  cardDates: { fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-mute)", marginTop: 4, letterSpacing: "0.06em" },
+  cardTag: { fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 10 },
+  modalBg: { position: "fixed", inset: 0, background: "rgba(8, 5, 2, 0.75)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", zIndex: 100, padding: 20, overflowY: "auto" },
+  modal: { maxWidth: 640, width: "100%", overflow: "hidden" },
+  modalHero: { height: 220, display: "grid", placeItems: "center", position: "relative", borderBottom: "1px solid var(--hairline)" },
+  modalGlyph: { fontSize: 80, color: "var(--gold-bright)", textAlign: "center", lineHeight: 1.1, padding: 16 },
+  closeBtn: { position: "absolute", top: 16, right: 16, width: 36, height: 36, borderRadius: 8, background: "rgba(0,0,0,0.4)", color: "var(--text-dim)", fontSize: 14, border: "1px solid var(--hairline)" },
+  modalContent: { padding: "28px 32px 32px" },
+  modalName: { fontFamily: "var(--font-display)", fontSize: 36, color: "var(--papyrus)", letterSpacing: "0.04em", margin: "6px 0 4px" },
+  modalTitle2: { fontStyle: "italic", color: "var(--gold-bright)", fontSize: 16, marginBottom: 18 },
+  modalFact: { color: "var(--text-dim)", fontSize: 15, lineHeight: 1.65 },
+};
+
+Object.assign(window, { Alphabet, Lessons, Pharaohs });
+</script>
+
+<!-- Practice screens: Flashcards · Match Game -->
+<script type="text/babel">
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+function Practice() {
+  const [mode, setMode] = React.useState("flash");
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div className="h-eyebrow">Train</div>
+        <h1 className="page-title">Practice the glyphs</h1>
+        <p className="page-subtitle">Two ways to memorize: rapid-fire flashcards, or a memory-style matching game. Earn a streak.</p>
+      </div>
+      <div style={prStyles.tabs}>
+        <button onClick={() => setMode("flash")} style={{...prStyles.tab, ...(mode === "flash" ? prStyles.tabActive : {})}}>
+          <span className="glyph" style={prStyles.tabGlyph}>𓂀</span>
+          <div><div style={prStyles.tabTitle}>Flashcards</div><div style={prStyles.tabSub}>See the glyph, pick the letter</div></div>
+        </button>
+        <button onClick={() => setMode("match")} style={{...prStyles.tab, ...(mode === "match" ? prStyles.tabActive : {})}}>
+          <span className="glyph" style={prStyles.tabGlyph}>𓊪</span>
+          <div><div style={prStyles.tabTitle}>Memory match</div><div style={prStyles.tabSub}>Pair glyphs with their letters</div></div>
+        </button>
+      </div>
+      {mode === "flash" ? <Flashcards/> : <MatchGame/>}
+    </div>
+  );
+}
+
+const prStyles = {
+  tabs: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12, marginBottom: 28 },
+  tab: { display: "flex", alignItems: "center", gap: 14, padding: "18px 20px", background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 12, cursor: "pointer", textAlign: "left", transition: "all 0.18s" },
+  tabActive: { background: "linear-gradient(180deg, rgba(212,162,76,0.15), rgba(212,162,76,0.05))", borderColor: "var(--hairline-strong)", boxShadow: "0 0 0 1px var(--hairline-strong) inset, 0 8px 24px rgba(212,162,76,0.15)" },
+  tabGlyph: { fontSize: 36, color: "var(--gold-bright)" },
+  tabTitle: { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--papyrus)", letterSpacing: "0.02em" },
+  tabSub: { color: "var(--text-mute)", fontSize: 13, marginTop: 2 },
+};
+
+function Flashcards() {
+  const [deck] = React.useState(() => shuffle(window.PRACTICE_DECK));
+  const [idx, setIdx] = React.useState(0);
+  const [picked, setPicked] = React.useState(null);
+  const [streak, setStreak] = React.useState(0);
+  const [score, setScore] = React.useState({ right: 0, wrong: 0 });
+  const [revealing, setRevealing] = React.useState(false);
+  const card = deck[idx];
+  const isDone = idx >= deck.length;
+
+  const handlePick = (option) => {
+    if (picked) return;
+    setPicked(option);
+    setRevealing(true);
+    const correct = option === card.answer;
+    setScore(s => ({ right: s.right + (correct ? 1 : 0), wrong: s.wrong + (correct ? 0 : 1) }));
+    setStreak(s => correct ? s + 1 : 0);
+    setTimeout(() => { setPicked(null); setRevealing(false); setIdx(i => i + 1); }, 1200);
+  };
+
+  const restart = () => { setIdx(0); setScore({right:0, wrong:0}); setStreak(0); setPicked(null); };
+
+  if (isDone) {
+    const pct = Math.round((score.right / deck.length) * 100);
+    return (
+      <div className="surface-stone" style={fStyles.doneCard}>
+        <div className="glyph" style={{fontSize: 80, color: "var(--gold-bright)", marginBottom: 16}}>𓋹</div>
+        <div className="h-eyebrow">Round complete</div>
+        <div style={fStyles.doneScore}>{score.right} <span style={{color: "var(--text-mute)"}}>/ {deck.length}</span></div>
+        <div style={fStyles.donePct}>{pct}% correct</div>
+        <p style={fStyles.doneMsg}>{pct === 100 ? "Perfect — you read like a scribe of Thebes!" : pct >= 80 ? "Excellent — the gods would be proud." : pct >= 60 ? "Good — keep training, young scribe." : "Keep practicing — every scribe started here."}</p>
+        <button className="btn btn-primary" onClick={restart}>Practice again</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="surface-stone" style={fStyles.wrap}>
+      <div style={fStyles.scoreBar}>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Card</span><span style={fStyles.scoreVal}>{idx + 1} <span style={{color: "var(--text-mute)"}}>/ {deck.length}</span></span></div>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Streak</span><span style={{...fStyles.scoreVal, color: streak >= 3 ? "var(--gold-bright)" : "var(--papyrus)"}}>{streak >= 3 && "🔥 "}{streak}</span></div>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Right</span><span style={{...fStyles.scoreVal, color: "var(--gold-bright)"}}>{score.right}</span></div>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Wrong</span><span style={{...fStyles.scoreVal, color: "var(--terracotta-bright)"}}>{score.wrong}</span></div>
+      </div>
+      <div style={fStyles.cardArea}>
+        <div style={fStyles.prompt}>What letter is this glyph?</div>
+        <div key={idx} style={fStyles.glyphBox}><span className="glyph" style={fStyles.bigGlyph}>{card.glyph}</span></div>
+        <div style={fStyles.options}>
+          {card.options.map(opt => {
+            const isCorrect = opt === card.answer;
+            const isPicked = opt === picked;
+            return (
+              <button key={opt} onClick={() => handlePick(opt)} disabled={!!picked}
+                style={{...fStyles.option, ...(revealing && isCorrect ? fStyles.optionRight : {}), ...(revealing && isPicked && !isCorrect ? fStyles.optionWrong : {})}}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const fStyles = {
+  wrap: { padding: "28px 32px" },
+  scoreBar: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, paddingBottom: 24, marginBottom: 28, borderBottom: "1px solid var(--hairline)" },
+  scoreItem: { display: "flex", flexDirection: "column", gap: 4 },
+  scoreLabel: { fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-mute)", fontFamily: "var(--font-display)" },
+  scoreVal: { fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 600, color: "var(--papyrus)" },
+  cardArea: { display: "flex", flexDirection: "column", alignItems: "center", gap: 28, paddingTop: 12 },
+  prompt: { fontSize: 14, color: "var(--text-mute)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-display)" },
+  glyphBox: { width: "100%", maxWidth: 320, aspectRatio: "1 / 1", background: "radial-gradient(ellipse at center, rgba(212,162,76,0.12), transparent 70%), linear-gradient(180deg, #2a1f10, #15100a)", border: "1px solid var(--hairline-strong)", borderRadius: 16, display: "grid", placeItems: "center", boxShadow: "inset 0 2px 12px rgba(0,0,0,0.5), 0 20px 40px -20px rgba(0,0,0,0.6)", animation: "glyphCarveIn 0.5s ease-out" },
+  bigGlyph: { fontSize: 180, color: "var(--gold-bright)", textShadow: "0 0 24px var(--gold-glow)" },
+  options: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 12, width: "100%", maxWidth: 480 },
+  option: { padding: "18px 20px", fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 600, letterSpacing: "0.1em", color: "var(--papyrus)", background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 10, cursor: "pointer", transition: "all 0.15s" },
+  optionRight: { background: "linear-gradient(180deg, rgba(212,162,76,0.3), rgba(212,162,76,0.1))", borderColor: "var(--gold)", color: "var(--gold-bright)", boxShadow: "0 0 0 3px rgba(212,162,76,0.2), 0 8px 24px rgba(212,162,76,0.3)" },
+  optionWrong: { background: "linear-gradient(180deg, rgba(184,85,46,0.3), rgba(184,85,46,0.1))", borderColor: "var(--terracotta)", color: "var(--terracotta-bright)" },
+  doneCard: { padding: "48px 40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" },
+  doneScore: { fontFamily: "var(--font-display)", fontSize: 72, fontWeight: 700, color: "var(--papyrus)", marginTop: 16 },
+  donePct: { color: "var(--gold-bright)", fontSize: 18, letterSpacing: "0.1em", marginTop: 4 },
+  doneMsg: { color: "var(--text-dim)", fontSize: 15, margin: "20px 0 28px", maxWidth: 400, lineHeight: 1.55 },
+};
+
+function makeBoard() {
+  const pool = shuffle([...window.ALPHABET]).slice(0, 8);
+  const tiles = [];
+  pool.forEach((a, i) => { tiles.push({ pairId: i, kind: "glyph", value: a.glyph }); tiles.push({ pairId: i, kind: "letter", value: a.letter }); });
+  return shuffle(tiles);
+}
+
+function MatchGame() {
+  const [tiles, setTiles] = React.useState(() => makeBoard());
+  const [flipped, setFlipped] = React.useState([]);
+  const [matched, setMatched] = React.useState(new Set());
+  const [moves, setMoves] = React.useState(0);
+  const [startTime] = React.useState(Date.now());
+  const [now, setNow] = React.useState(Date.now());
+  const allMatched = matched.size === tiles.length;
+
+  React.useEffect(() => {
+    if (allMatched) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [allMatched]);
+
+  const handleFlip = (i) => {
+    if (flipped.length >= 2 || flipped.includes(i) || matched.has(i)) return;
+    const next = [...flipped, i];
+    setFlipped(next);
+    if (next.length === 2) {
+      setMoves(m => m + 1);
+      const [a, b] = next;
+      if (tiles[a].pairId === tiles[b].pairId) {
+        setTimeout(() => { setMatched(prev => new Set([...prev, a, b])); setFlipped([]); }, 500);
+      } else { setTimeout(() => setFlipped([]), 900); }
+    }
+  };
+
+  const restart = () => { setTiles(makeBoard()); setFlipped([]); setMatched(new Set()); setMoves(0); };
+  const seconds = Math.floor((now - startTime) / 1000);
+
+  if (allMatched) {
+    return (
+      <div className="surface-stone" style={fStyles.doneCard}>
+        <div className="glyph" style={{fontSize: 80, color: "var(--gold-bright)", marginBottom: 16}}>𓂀</div>
+        <div className="h-eyebrow">Tomb sealed</div>
+        <div style={fStyles.doneScore}>{moves} <span style={{fontSize: 32, color: "var(--text-mute)"}}>moves</span></div>
+        <div style={fStyles.donePct}>{Math.floor(seconds/60)}:{String(seconds%60).padStart(2, "0")}</div>
+        <p style={fStyles.doneMsg}>All pairs matched. A pharaoh would be proud.</p>
+        <button className="btn btn-primary" onClick={restart}>Play again</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="surface-stone" style={{padding: "28px 32px"}}>
+      <div style={mgStyles.bar}>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Moves</span><span style={fStyles.scoreVal}>{moves}</span></div>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Pairs</span><span style={fStyles.scoreVal}>{matched.size/2} <span style={{color: "var(--text-mute)"}}>/ {tiles.length/2}</span></span></div>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Time</span><span style={fStyles.scoreVal}>{Math.floor(seconds/60)}:{String(seconds%60).padStart(2, "0")}</span></div>
+        <button className="btn btn-ghost" onClick={restart} style={{marginLeft: "auto"}}>Restart</button>
+      </div>
+      <div style={mgStyles.board}>
+        {tiles.map((t, i) => {
+          const isOpen = flipped.includes(i) || matched.has(i);
+          const isMatched = matched.has(i);
+          return (
+            <button key={i} onClick={() => handleFlip(i)} style={{...mgStyles.tile, ...(isOpen ? mgStyles.tileOpen : {}), ...(isMatched ? mgStyles.tileMatched : {})}}>
+              <div style={{...mgStyles.tileInner, transform: isOpen ? "rotateY(180deg)" : "rotateY(0)"}}>
+                <div style={mgStyles.tileBack}><span className="glyph" style={mgStyles.tileBackGlyph}>𓂀</span></div>
+                <div style={mgStyles.tileFront}>{t.kind === "glyph" ? <span className="glyph" style={mgStyles.tileGlyphChar}>{t.value}</span> : <span style={mgStyles.tileLetterChar}>{t.value}</span>}</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const mgStyles = {
+  bar: { display: "flex", alignItems: "center", gap: 32, paddingBottom: 24, marginBottom: 24, borderBottom: "1px solid var(--hairline)" },
+  board: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, maxWidth: 640, margin: "0 auto" },
+  tile: { aspectRatio: "1/1", padding: 0, background: "transparent", border: "none", perspective: 800, cursor: "pointer" },
+  tileOpen: {},
+  tileMatched: {},
+  tileInner: { width: "100%", height: "100%", position: "relative", transformStyle: "preserve-3d", transition: "transform 0.5s ease" },
+  tileBack: { position: "absolute", inset: 0, background: "linear-gradient(135deg, var(--surface-3), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 12, display: "grid", placeItems: "center", backfaceVisibility: "hidden", boxShadow: "inset 0 1px 0 rgba(232,217,176,0.04), 0 4px 12px rgba(0,0,0,0.3)" },
+  tileBackGlyph: { fontSize: 36, color: "var(--gold-deep)", opacity: 0.5 },
+  tileFront: { position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(212,162,76,0.18), rgba(212,162,76,0.04))", border: "1px solid var(--gold)", borderRadius: 12, display: "grid", placeItems: "center", backfaceVisibility: "hidden", transform: "rotateY(180deg)", boxShadow: "0 0 0 1px var(--hairline-strong), inset 0 1px 0 rgba(232,217,176,0.08), 0 6px 20px rgba(212,162,76,0.2)" },
+  tileGlyphChar: { fontSize: "clamp(28px, 7vw, 56px)", color: "var(--gold-bright)" },
+  tileLetterChar: { fontFamily: "var(--font-display)", fontSize: "clamp(24px, 5vw, 42px)", fontWeight: 700, color: "var(--papyrus)", letterSpacing: "0.1em" },
+};
+
+Object.assign(window, { Practice });
+</script>
+
+<!-- Main App -->
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const DEFAULTS = { "accent": "#D4A24C", "glyphSize": 100, "showDaily": true, "compactNav": false };
+
+const ACCENT_MAP = {
+  "#D4A24C": { bright: "#E8C36E", deep: "#8C6A2A" },
+  "#4A82B8": { bright: "#7AABDB", deep: "#1A3A5F" },
+  "#D67244": { bright: "#E89066", deep: "#6B2A14" },
+  "#6BA888": { bright: "#94CDB0", deep: "#2E5A42" },
+};
+
+const NAV = [
+  { id: "translate", label: "Translate", glyph: "𓂀" },
+  { id: "alphabet",  label: "Alphabet",  glyph: "𓄿" },
+  { id: "cartouche", label: "Cartouche", glyph: "𓍷" },
+  { id: "lessons",   label: "Lessons",   glyph: "𓊪" },
+  { id: "pharaohs",  label: "Pharaohs",  glyph: "𓋹" },
+  { id: "practice",  label: "Practice",  glyph: "𓆣" },
+];
+
+function App() {
+  const [route, setRoute] = useState(() => { const h = window.location.hash.replace("#", ""); return NAV.some(n => n.id === h) ? h : "translate"; });
+  const [tweaks, setTweak] = window.useTweaks(DEFAULTS);
+
+  useEffect(() => { window.location.hash = route; }, [route]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const accent = ACCENT_MAP[tweaks.accent] || ACCENT_MAP["#D4A24C"];
+    root.style.setProperty("--gold", tweaks.accent);
+    root.style.setProperty("--gold-bright", accent.bright);
+    root.style.setProperty("--gold-deep", accent.deep);
+    root.style.setProperty("--gold-glow", `${accent.bright}73`);
+    root.style.setProperty("--hairline", `${tweaks.accent}2e`);
+    root.style.setProperty("--hairline-strong", `${tweaks.accent}52`);
+  }, [tweaks.accent]);
+
+  useEffect(() => { document.documentElement.style.setProperty("--glyph-scale", String(tweaks.glyphSize / 100)); }, [tweaks.glyphSize]);
+
+  const current = NAV.find(n => n.id === route);
+
+  return (
+    <>
+      <header className="topbar">
+        <div className="topbar-inner">
+          <div className="logo" onClick={() => setRoute("translate")}>
+            <div className="logo-mark">𓂀</div>
+            <div><div className="logo-text">MEDU</div><div className="logo-tag">Words of the gods</div></div>
+          </div>
+          <nav className="nav">
+            {NAV.map(n => (
+              <button key={n.id} className={`nav-item ${route === n.id ? "active" : ""}`} onClick={() => setRoute(n.id)}>
+                <span className="glyph nav-glyph">{n.glyph}</span>
+                {!tweaks.compactNav && <span>{n.label}</span>}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      <main className="page">
+        {route === "translate" && (<>{tweaks.showDaily && <window.DailyGlyphCard/>}<window.Translator/></>)}
+        {route === "alphabet"  && <window.Alphabet/>}
+        {route === "cartouche" && <window.Cartouche/>}
+        {route === "lessons"   && <window.Lessons/>}
+        {route === "pharaohs"  && <window.Pharaohs/>}
+        {route === "practice"  && <window.Practice/>}
+      </main>
+
+      <footer style={footerStyles.footer}>
+        <div style={footerStyles.footerInner}>
+          <div style={footerStyles.footerCol}>
+            <div className="h-eyebrow" style={{marginBottom: 6}}>MEDU NETJER</div>
+            <div style={{color: "var(--text-mute)", fontSize: 13, lineHeight: 1.55, maxWidth: 360}}>A learning playground for ancient Egyptian hieroglyphs. Translate, decode, study the pharaohs, and earn your scribe's title.</div>
+          </div>
+          <div style={footerStyles.footerCol}>
+            <div className="h-eyebrow" style={{marginBottom: 12}}>Did you know?</div>
+            <div style={{color: "var(--text-dim)", fontSize: 13, lineHeight: 1.55}}>Hieroglyphs were used for over <span style={{color: "var(--gold-bright)"}}>3,000 years</span> — longer than the modern alphabet has existed. The last one was carved in <span style={{color: "var(--gold-bright)"}}>394 CE</span>.</div>
+          </div>
+          <div style={footerStyles.footerGlyphs}>
+            <span className="glyph">𓋹</span><span className="glyph">𓊽</span><span className="glyph">𓌀</span><span className="glyph">𓂀</span><span className="glyph">𓇳</span>
+          </div>
+        </div>
+      </footer>
+
+      <window.TweaksPanel title="Tweaks">
+        <window.TweakSection label="Theme">
+          <window.TweakColor label="Accent" value={tweaks.accent} options={["#D4A24C", "#4A82B8", "#D67244", "#6BA888"]} onChange={(v) => setTweak("accent", v)}/>
+        </window.TweakSection>
+        <window.TweakSection label="Layout">
+          <window.TweakSlider label="Glyph size" value={tweaks.glyphSize} min={70} max={140} step={5} unit="%" onChange={(v) => setTweak("glyphSize", v)}/>
+          <window.TweakToggle label="Compact nav" value={tweaks.compactNav} onChange={(v) => setTweak("compactNav", v)}/>
+          <window.TweakToggle label="Daily glyph" value={tweaks.showDaily} onChange={(v) => setTweak("showDaily", v)}/>
+        </window.TweakSection>
+      </window.TweaksPanel>
+    </>
+  );
+}
+
+const footerStyles = {
+  footer: { borderTop: "1px solid var(--hairline)", padding: "32px 28px", marginTop: 60, background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.4))" },
+  footerInner: { maxWidth: 1400, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 40, alignItems: "center" },
+  footerCol: { display: "flex", flexDirection: "column" },
+  footerGlyphs: { display: "flex", gap: 18, fontSize: 32, color: "var(--gold-deep)", opacity: 0.7, fontFamily: "var(--font-glyph)" },
+};
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);
+</script>
+
+</body>
+</html>
