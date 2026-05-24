@@ -1,8 +1,15 @@
-# 𓂀 MEDU — Words of the Gods
+![MEDU Banner](https://capsule-render.vercel.app/api?type=waving&color=0E0A05,251B0F,8C6A2A,D4A24C&height=200&section=header&text=𓂀%20MEDU&fontSize=80&fontColor=D4A24C&animation=fadeIn&fontAlignY=42&desc=Words%20of%20the%20Gods%20%E2%80%94%20Egyptian%20Hieroglyph%20Translator&descAlignY=68&descAlign=50&descSize=16)
 
-> *An interactive Egyptian hieroglyph translator and learning app for curious minds.*
+<div align="center">
 
-**[Launch Desktop App](https://highviewone.github.io/EgyptianHieroglyphsTranslator/) · [Launch Mobile App](https://highviewone.github.io/EgyptianHieroglyphsTranslator/Medu%20Mobile.html)**
+[![GitHub Pages](https://img.shields.io/github/deployments/HighviewOne/EgyptianHieroglyphsTranslator/github-pages?label=live%20app&color=D4A24C&logo=github&logoColor=white)](https://highviewone.github.io/EgyptianHieroglyphsTranslator/)
+[![Last Commit](https://img.shields.io/github/last-commit/HighviewOne/EgyptianHieroglyphsTranslator?color=8C6A2A&label=last%20update)](https://github.com/HighviewOne/EgyptianHieroglyphsTranslator/commits/main)
+[![Repo Size](https://img.shields.io/github/repo-size/HighviewOne/EgyptianHieroglyphsTranslator?color=251B0F&label=size)](https://github.com/HighviewOne/EgyptianHieroglyphsTranslator)
+[![License: MIT](https://img.shields.io/badge/license-MIT-E8C36E)](LICENSE)
+
+**[🏛 Launch Desktop App](https://highviewone.github.io/EgyptianHieroglyphsTranslator/) · [📱 Launch Mobile App](https://highviewone.github.io/EgyptianHieroglyphsTranslator/Medu%20Mobile.html)**
+
+</div>
 
 ---
 
@@ -16,7 +23,7 @@ This app lets you translate English into hieroglyphs, learn the alphabet, build 
 
 ## Features
 
-### Desktop (`index.html`)
+### 🖥 Desktop (`index.html`)
 
 | Tab | What you can do |
 |---|---|
@@ -27,7 +34,7 @@ This app lets you translate English into hieroglyphs, learn the alphabet, build 
 | 𓉐 **Pharaohs** | 8 legendary rulers with their cartouche glyphs and full bio cards. |
 | 𓆣 **Practice** | Flashcards with streak counter + a 4×4 memory-match card game. |
 
-### Mobile (`Medu Mobile.html`)
+### 📱 Mobile (`Medu Mobile.html`)
 
 A pixel-perfect iPhone mockup with Dynamic Island, status bar, and home indicator — four tabs, bottom sheets, and touch-friendly layout.
 
@@ -57,11 +64,11 @@ The translator recognizes 26 special whole-word translations beyond the alphabet
 
 Inspired by tomb-wall carvings — deep midnight background, gold accents, and the Cinzel display font, with a `glyphCarveIn` reveal animation on every translation.
 
-```
-Background  #0E0A05   Deep midnight
-Gold        #D4A24C   Warm sarcophagus gold
-Text        #F4E8C8   Papyrus cream
-```
+| Token | Hex | Role |
+|---|---|---|
+| `--bg-deep` | `#0E0A05` | Deep midnight background |
+| `--gold` | `#D4A24C` | Warm sarcophagus gold |
+| `--papyrus` | `#F4E8C8` | Papyrus cream text |
 
 ---
 
@@ -77,5 +84,7 @@ open "Medu Mobile.html"  # mobile mockup
 No `npm install`. No build. Just open and learn.
 
 ---
+
+![Footer](https://capsule-render.vercel.app/api?type=waving&color=0E0A05,251B0F,8C6A2A,D4A24C&height=100&section=footer)
 
 *Built with ♥ for young explorers of ancient worlds.*
