@@ -6,6 +6,7 @@
 
 - [ ] `index.html` (desktop)
 - [ ] `Medu Mobile.html` (mobile)
+- [ ] `data.js` (shared glyph data + translation engine)
 - [ ] `README.md`
 - [ ] Other: ___
 

@@ -42,21 +42,21 @@ A pixel-perfect iPhone mockup with Dynamic Island, status bar, and home indicato
 
 ## How It Works
 
-Both files are **fully self-contained** — no server, no build step, no dependencies to install. Open either HTML file directly in any browser.
+No server, no build step, no dependencies to install. Open either HTML file directly in any browser. Both share the glyph data and translation engine in `data.js`.
 
 - **React 18** + **Babel standalone** for in-browser JSX rendering
 - **Unicode hieroglyphs** from the U+13000–U+1342F block
 - **Noto Sans Egyptian Hieroglyphs** font for authentic glyph rendering
-- Translation engine: digraph-first scan → whole-word sacred glyph lookup → letter-by-letter fallback
+- Translation engine: whole-word sacred glyph lookup → digraph scan → letter-by-letter fallback; reverse translation uses longest-match
 - Progress persists in `localStorage`
 
 ---
 
 ## Sacred Words
 
-The translator recognizes 26 special whole-word translations beyond the alphabet:
+The translator recognizes 25 special whole-word translations beyond the alphabet:
 
-𓋹 ANKH · 𓉐𓉻 PHARAOH · 𓆎𓅓𓏏𓊖 EGYPT · 𓇳 RA · 𓁹 EYE · 𓆑 SNAKE · 𓅃 FALCON · 𓂋𓏤 MOUTH · 𓇋𓇌 REED · 𓈖𓇌𓇌𓈖 WATER · *…and more*
+𓋹 ANKH · 𓉐𓉻 PHARAOH · 𓆎𓅓𓏏𓊖 EGYPT · 𓇳 RA · 𓂀 EYE · 𓅃 FALCON · 𓄤 NEFER · 𓊵 HOTEP · 𓈗 WATER · 𓋞 GOLD · *…and more*
 
 ---
 
