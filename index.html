@@ -716,21 +716,39 @@ function Cartouche() {
   const handleShareImage = async () => {
     const svg = document.querySelector("#cartouche-svg");
     if (!svg) return;
-    const xml = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([xml], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(svgBlob);
+    // An SVG drawn as an <img> can't use the page's web fonts, so draw the shapes from the SVG
+    // and paint the glyphs onto the canvas ourselves with the loaded Noto font.
+    const texts = Array.from(svg.querySelectorAll("text"));
+    const shapes = svg.cloneNode(true);
+    shapes.querySelectorAll("text").forEach(t => t.remove());
+    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(shapes)], { type: "image/svg+xml" }));
     const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
+    img.onload = async () => {
+      const vb = svg.viewBox.baseVal;
       const scale = 2;
-      canvas.width = svg.clientWidth * scale;
-      canvas.height = svg.clientHeight * scale;
+      const canvas = document.createElement("canvas");
+      canvas.width = vb.width * scale;
+      canvas.height = vb.height * scale;
       const ctx = canvas.getContext("2d");
       ctx.fillStyle = "#0E0A05";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(blob => { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `cartouche-${name || "royal"}.png`; a.click(); });
       URL.revokeObjectURL(url);
+      try { await document.fonts.load(`64px "Noto Sans Egyptian Hieroglyphs"`, texts.map(t => t.textContent).join("")); } catch {}
+      ctx.textAlign = "center";
+      for (const t of texts) {
+        const cs = getComputedStyle(t);
+        ctx.font = `${parseFloat(cs.fontSize) * scale}px ${cs.fontFamily}`;
+        ctx.fillStyle = t.getAttribute("fill") || "#E8C36E";
+        ctx.fillText(t.textContent, Number(t.getAttribute("x")) * scale, Number(t.getAttribute("y")) * scale);
+      }
+      canvas.toBlob(blob => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `cartouche-${name || "royal"}.png`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      });
     };
     img.src = url;
   };
