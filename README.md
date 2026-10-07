@@ -36,15 +36,15 @@ This app lets you translate English into hieroglyphs, learn the alphabet, build 
 
 ### 📱 Mobile (`Medu Mobile.html`)
 
-A pixel-perfect iPhone mockup with Dynamic Island, status bar, and home indicator — four tabs, bottom sheets, and touch-friendly layout.
+A touch-first version with four tabs and bottom sheets. On a phone it fills the screen like a native app; on a bigger screen it's shown inside an iPhone mockup.
 
 ---
 
 ## How It Works
 
-No server, no build step, no dependencies to install. Open either HTML file directly in any browser. Both share the glyph data and translation engine in `data.js`.
+No server needed — open either HTML file directly in any browser. The app code is precompiled, so pages load fast with no in-browser compiling.
 
-- **React 18** + **Babel standalone** for in-browser JSX rendering
+- **React 18** (production build) with JSX precompiled by **esbuild**
 - **Unicode hieroglyphs** from the U+13000–U+1342F block
 - **Noto Sans Egyptian Hieroglyphs** font for authentic glyph rendering
 - Translation engine: whole-word sacred glyph lookup → digraph scan → letter-by-letter fallback; reverse translation uses longest-match
@@ -78,10 +78,30 @@ Inspired by tomb-wall carvings — deep midnight background, gold accents, and t
 git clone https://github.com/HighviewOne/EgyptianHieroglyphsTranslator.git
 cd EgyptianHieroglyphsTranslator
 open index.html          # desktop
-open "Medu Mobile.html"  # mobile mockup
+open "Medu Mobile.html"  # mobile app
 ```
 
-No `npm install`. No build. Just open and learn.
+No install needed just to use it — just open and learn.
+
+## Project Layout
+
+| Path | What it is |
+|---|---|
+| `data.js` | Glyph data + translation engine, shared by both pages |
+| `src/desktop.jsx`, `src/mobile.jsx` | App code for each page (edit these) |
+| `src/shared.jsx` | Helpers both apps use (dialogs, speech) |
+| `dist/` | Compiled app code the pages load — generated, don't edit |
+| `tests/` | Checks for the data and translator |
+
+## Making Changes
+
+```bash
+npm install        # once
+npm run build      # after editing anything in src/ — then commit dist/ too
+npm test           # data + translator checks
+```
+
+`data.js`, the HTML and CSS need no build. CI runs the tests and fails if `dist/` wasn't rebuilt after a `src/` change.
 
 ---
 

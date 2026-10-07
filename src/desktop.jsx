@@ -1,0 +1,843 @@
+import { useDialog, speak, fitGlyphs } from "./shared.jsx";
+
+// Translate + Cartouche + Daily Glyph screens
+function DailyGlyphCard() {
+  const daily = React.useMemo(() => window.getDailyGlyph(), []);
+  return (
+    <div className="daily-card surface-stone" style={dailyStyles.card}>
+      <div style={dailyStyles.left}>
+        <div className="h-eyebrow">Glyph of the day</div>
+        <div style={dailyStyles.name}>{daily.name}</div>
+        <div style={dailyStyles.meaning}>"{daily.meaning}"</div>
+        <div style={dailyStyles.fact}>{daily.fact}</div>
+      </div>
+      <div style={dailyStyles.right}>
+        <div className="glyph glyph-glow" style={dailyStyles.bigGlyph}>{daily.glyph}</div>
+      </div>
+    </div>
+  );
+}
+
+const dailyStyles = {
+  card: { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 32, padding: "28px 32px", marginBottom: 28, overflow: "hidden" },
+  left: { display: "flex", flexDirection: "column", gap: 6, maxWidth: 520 },
+  name: { fontFamily: "var(--font-display)", fontSize: 32, fontWeight: 700, color: "var(--papyrus)", marginTop: 8, letterSpacing: "0.06em" },
+  meaning: { fontStyle: "italic", color: "var(--gold-bright)", fontSize: 16, marginBottom: 8 },
+  fact: { color: "var(--text-dim)", fontSize: 14, lineHeight: 1.55 },
+  right: { paddingLeft: 24 },
+  bigGlyph: { fontSize: 120, color: "var(--gold-bright)" },
+};
+
+function Translator() {
+  const [direction, setDirection] = React.useState("toGlyph");
+  const [input, setInput] = React.useState("");
+  const [hovered, setHovered] = React.useState(null);
+  const [copied, setCopied] = React.useState(false);
+
+  const shown = direction === "toGlyph" ? window.translateToGlyphs(input) : [];
+  const englishOut = direction === "toEnglish" ? window.translateFromGlyphs(input) : "";
+
+  const handleCopy = async () => {
+    const text = direction === "toGlyph" ? window.translateToGlyphs(input).map(t => t.glyph).join("") : englishOut;
+    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch {}
+  };
+
+
+  return (
+    <div className="surface-stone fade-up" style={tStyles.wrap}>
+      <div style={tStyles.header}>
+        <div className="h-eyebrow">Translator</div>
+        <div style={tStyles.directionToggle}>
+          <button onClick={() => { setDirection("toGlyph"); setInput(""); }} style={{...tStyles.dirBtn, ...(direction === "toGlyph" ? tStyles.dirBtnActive : {})}}>English <span style={tStyles.arrow}>→</span> <span className="glyph">𓂀</span></button>
+          <button onClick={() => { setDirection("toEnglish"); setInput(""); }} style={{...tStyles.dirBtn, ...(direction === "toEnglish" ? tStyles.dirBtnActive : {})}}><span className="glyph">𓂀</span> <span style={tStyles.arrow}>→</span> English</button>
+        </div>
+      </div>
+      <div style={tStyles.body}>
+        <div>
+          <label className="small-caps" style={{marginBottom: 8, display: "block"}}>{direction === "toGlyph" ? "Type in English" : "Paste hieroglyphs"}</label>
+          <textarea className="textarea" placeholder={direction === "toGlyph" ? "Try your name, or 'pharaoh ankh life'..." : "Paste 𓋹 𓄿 𓅓 ..."} value={input} onChange={(e) => setInput(e.target.value)} maxLength={direction === "toGlyph" ? 80 : 200} style={tStyles.textarea}/>
+          <div style={tStyles.inputFoot}>
+            <span className="muted" style={{fontSize: 12}}>{direction === "toGlyph" ? `${input.length}/80 characters` : "Try copying glyphs from any other tab"}</span>
+            {input && <button onClick={() => setInput("")} style={tStyles.clearBtn}>clear</button>}
+          </div>
+        </div>
+        <div>
+          <div style={tStyles.outputLabel}>
+            <span className="small-caps">Output</span>
+            {(shown.length > 0 || englishOut) && (
+              <div style={{display: "flex", gap: 8}}>
+                <button className="btn-ghost" style={tStyles.smallBtn} onClick={() => speak(direction === "toGlyph" ? input : englishOut)}><span style={{fontSize: 14}}>🔊</span> SPEAK</button>
+                <button className="btn-ghost" style={tStyles.smallBtn} onClick={handleCopy}>{copied ? "✓ COPIED" : "COPY"}</button>
+              </div>
+            )}
+          </div>
+          {direction === "toGlyph" ? (
+            <div style={tStyles.glyphOut}>
+              {shown.length === 0 && !input && <div style={tStyles.placeholder}>Your message will appear here in ancient glyphs.</div>}
+              <div style={tStyles.glyphLine}>
+                {shown.map((tok, idx) => {
+                  if (tok.type === "space") return <span key={idx} style={{display:"inline-block", width: 24}}/>;
+                  if (tok.type === "punct") return <span key={idx} style={tStyles.punct}>{tok.glyph}</span>;
+                  return (
+                    <button key={idx} style={{...tStyles.glyphCell, animationDelay: `${idx * 70}ms`, ...(hovered === idx ? tStyles.glyphCellHover : {})}}
+                      onMouseEnter={() => setHovered(idx)} onMouseLeave={() => setHovered(null)} onFocus={() => setHovered(idx)}
+                      onClick={() => { setHovered(idx); speak(tok.char); }} title={`${tok.char.toUpperCase()} · ${tok.name}`}
+                      aria-label={`${tok.char.toUpperCase()}: ${tok.name}. Play sound`}>
+                      <span className="glyph" aria-hidden="true" style={tStyles.glyphChar}>{tok.glyph}</span>
+                      <span aria-hidden="true" style={tStyles.glyphSub}>{tok.char.toUpperCase()}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {hovered !== null && shown[hovered] && shown[hovered].type !== "space" && (
+                <div style={tStyles.glyphHint}>
+                  <span className="glyph" style={{fontSize: 24, color: "var(--gold-bright)"}}>{shown[hovered].glyph}</span>
+                  <span style={{fontWeight: 600, color: "var(--papyrus)"}}>{shown[hovered].name}</span>
+                  <span style={{color: "var(--text-mute)"}}>· {shown[hovered].type === "word" ? "sacred word" : "phonetic"}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={tStyles.englishOut}>
+              {englishOut ? <div style={tStyles.englishText}>{englishOut}</div> : <div style={tStyles.placeholder}>Paste hieroglyphs above to decode them.</div>}
+            </div>
+          )}
+        </div>
+      </div>
+      {direction === "toGlyph" && !input && (
+        <div style={tStyles.samples}>
+          <span className="small-caps" style={{marginRight: 8}}>Try:</span>
+          {["ANKH", "RAMSES", "HORUS RA", "MY NAME IS", "NEFER HOTEP"].map(s => (
+            <button key={s} style={tStyles.chip} onClick={() => setInput(s)}>{s}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const tStyles = {
+  wrap: { padding: "28px 32px", marginBottom: 28 },
+  header: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 22, paddingBottom: 18, borderBottom: "1px solid var(--hairline)" },
+  directionToggle: { display: "flex", background: "var(--bg-deep)", borderRadius: 10, padding: 4, border: "1px solid var(--hairline)" },
+  dirBtn: { padding: "10px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-mute)", background: "transparent", border: "none", borderRadius: 7, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s" },
+  dirBtnActive: { background: "linear-gradient(180deg, rgba(212,162,76,0.15), rgba(212,162,76,0.05))", color: "var(--papyrus)", boxShadow: "inset 0 0 0 1px var(--hairline-strong)" },
+  arrow: { color: "var(--gold)", opacity: 0.7 },
+  body: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 },
+  textarea: { fontSize: 18, letterSpacing: "0.04em" },
+  inputFoot: { display: "flex", justifyContent: "space-between", marginTop: 8 },
+  clearBtn: { fontSize: 11, color: "var(--text-mute)", letterSpacing: "0.1em", textTransform: "uppercase" },
+  outputLabel: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  smallBtn: { padding: "6px 12px", fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", borderRadius: 6, background: "transparent", color: "var(--text-dim)", boxShadow: "inset 0 0 0 1px var(--hairline)", display: "flex", alignItems: "center", gap: 4 },
+  glyphOut: { minHeight: 180, background: "linear-gradient(180deg, #2a1f10, #1a140a)", borderRadius: 12, border: "1px solid var(--hairline)", padding: 24, position: "relative", boxShadow: "inset 0 2px 8px rgba(0,0,0,0.4)" },
+  glyphLine: { display: "flex", flexWrap: "wrap", gap: 6, alignItems: "flex-end" },
+  glyphCell: { display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "8px 6px", borderRadius: 8, background: "transparent", border: "1px solid transparent", transition: "all 0.15s", animation: "glyphCarveIn 0.45s ease-out backwards", cursor: "pointer" },
+  glyphCellHover: { background: "rgba(212, 162, 76, 0.08)", border: "1px solid var(--hairline-strong)" },
+  glyphChar: { fontSize: 44, color: "var(--gold-bright)", textShadow: "0 0 12px rgba(232,195,110,0.3)" },
+  glyphSub: { fontSize: 10, color: "var(--text-mute)", marginTop: 4, letterSpacing: "0.1em" },
+  punct: { fontSize: 28, color: "var(--text-dim)", padding: "0 4px" },
+  placeholder: { color: "var(--text-faint)", fontStyle: "italic", padding: "40px 0", textAlign: "center" },
+  glyphHint: { marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--hairline)", display: "flex", alignItems: "center", gap: 10, fontSize: 13 },
+  englishOut: { minHeight: 180, background: "linear-gradient(180deg, #2a1f10, #1a140a)", borderRadius: 12, border: "1px solid var(--hairline)", padding: 24, boxShadow: "inset 0 2px 8px rgba(0,0,0,0.4)" },
+  englishText: { fontSize: 28, color: "var(--papyrus)", letterSpacing: "0.03em", fontFamily: "var(--font-display)", fontWeight: 600 },
+  samples: { marginTop: 22, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 },
+  chip: { padding: "6px 12px", fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", color: "var(--text-dim)", background: "rgba(212, 162, 76, 0.05)", border: "1px solid var(--hairline)", borderRadius: 999, cursor: "pointer", transition: "all 0.15s" },
+};
+
+function Cartouche() {
+  const [name, setName] = React.useState("");
+  const [orientation, setOrientation] = React.useState("vertical");
+  const tokens = window.translateToGlyphs(name).filter(t => t.type !== "space" && t.type !== "punct");
+
+  const handleShareImage = async () => {
+    const svg = document.querySelector("#cartouche-svg");
+    if (!svg) return;
+    // An SVG drawn as an <img> can't use the page's web fonts, so draw the shapes from the SVG
+    // and paint the glyphs onto the canvas ourselves with the loaded Noto font.
+    const texts = Array.from(svg.querySelectorAll("text"));
+    const shapes = svg.cloneNode(true);
+    shapes.querySelectorAll("text").forEach(t => t.remove());
+    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(shapes)], { type: "image/svg+xml" }));
+    const img = new Image();
+    img.onload = async () => {
+      const vb = svg.viewBox.baseVal;
+      const scale = 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = vb.width * scale;
+      canvas.height = vb.height * scale;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#0E0A05";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      try { await document.fonts.load(`64px "Noto Sans Egyptian Hieroglyphs"`, texts.map(t => t.textContent).join("")); } catch {}
+      ctx.textAlign = "center";
+      for (const t of texts) {
+        const cs = getComputedStyle(t);
+        ctx.font = `${parseFloat(cs.fontSize) * scale}px ${cs.fontFamily}`;
+        ctx.fillStyle = t.getAttribute("fill") || "#E8C36E";
+        ctx.fillText(t.textContent, Number(t.getAttribute("x")) * scale, Number(t.getAttribute("y")) * scale);
+      }
+      canvas.toBlob(blob => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `cartouche-${name || "royal"}.png`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      });
+    };
+    img.src = url;
+  };
+
+  return (
+    <div className="surface-stone fade-up" style={cStyles.wrap}>
+      <div style={cStyles.header}>
+        <div className="h-eyebrow">Royal Cartouche</div>
+        <h2 style={cStyles.title}>Your name in pharaoh's writing</h2>
+        <p style={cStyles.sub}>A cartouche is the oval rope-loop scribes drew around royal names — a magical protection that locked the name inside.</p>
+      </div>
+      <div style={cStyles.body}>
+        <div style={cStyles.controls}>
+          <label className="small-caps" style={{display: "block", marginBottom: 8}}>Enter a name</label>
+          <input className="input" placeholder="e.g. ALEX" value={name} onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 14))} style={{fontSize: 22, letterSpacing: "0.1em", textAlign: "center", fontFamily: "var(--font-display)"}}/>
+          <div style={{marginTop: 22}}>
+            <label className="small-caps" style={{display: "block", marginBottom: 8}}>Orientation</label>
+            <div style={cStyles.toggle}>
+              <button onClick={() => setOrientation("vertical")} style={{...cStyles.tBtn, ...(orientation === "vertical" ? cStyles.tBtnA : {})}}>▌ Vertical</button>
+              <button onClick={() => setOrientation("horizontal")} style={{...cStyles.tBtn, ...(orientation === "horizontal" ? cStyles.tBtnA : {})}}>▬ Horizontal</button>
+            </div>
+          </div>
+          {name && (
+            <div style={cStyles.actions}>
+              <button className="btn btn-primary" onClick={handleShareImage}>⬇ Save as image</button>
+              <button className="btn btn-ghost" onClick={() => window.print()}>Print</button>
+            </div>
+          )}
+          {name && (
+            <div style={cStyles.breakdown}>
+              <div className="small-caps" style={{marginBottom: 10}}>Letter by letter</div>
+              {tokens.map((t, i) => (
+                <div key={i} style={cStyles.bdRow}>
+                  <span style={cStyles.bdLetter}>{t.char.toUpperCase()}</span>
+                  <span className="glyph" style={cStyles.bdGlyph}>{t.glyph}</span>
+                  <span style={cStyles.bdName}>{t.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div style={cStyles.display}>
+          <CartoucheSvg tokens={tokens} orientation={orientation}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CartoucheSvg({ tokens, orientation }) {
+  const isVert = orientation === "vertical";
+  const w = isVert ? 320 : 640;
+  const h = isVert ? 640 : 280;
+  const padTop = isVert ? 40 : 30;
+  const padBottom = padTop;
+  const innerH = h - padTop - padBottom - 20;
+  const innerW = w - 60;
+  return (
+    <svg id="cartouche-svg" viewBox={`0 0 ${w} ${h}`} style={{width: "100%", maxWidth: w, height: "auto"}}>
+      <defs>
+        <linearGradient id="cartGold" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#E8C36E"/><stop offset="50%" stopColor="#D4A24C"/><stop offset="100%" stopColor="#8C6A2A"/>
+        </linearGradient>
+        <linearGradient id="cartFill" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#2A1F0E"/><stop offset="100%" stopColor="#1A140A"/>
+        </linearGradient>
+        <filter id="cartGlow"><feGaussianBlur stdDeviation="3"/></filter>
+      </defs>
+      <ellipse cx={w/2} cy={h-padBottom/2+6} rx={isVert?100:280} ry="8" fill="rgba(0,0,0,0.5)" filter="url(#cartGlow)"/>
+      {isVert ? (
+        <g>
+          <rect x="30" y={padTop} width={w-60} height={h-padTop-padBottom-20} rx={(w-60)/2} ry={(w-60)/2} fill="url(#cartFill)" stroke="url(#cartGold)" strokeWidth="6"/>
+          <rect x="30" y={padTop} width={w-60} height={h-padTop-padBottom-20} rx={(w-60)/2} ry={(w-60)/2} fill="none" stroke="#5D4220" strokeWidth="1.5"/>
+          <rect x="20" y={h-padBottom-20} width={w-40} height="14" rx="3" fill="url(#cartGold)" stroke="#5D4220" strokeWidth="1"/>
+          <line x1="30" y1={h-padBottom-13} x2={w-30} y2={h-padBottom-13} stroke="rgba(0,0,0,0.3)" strokeWidth="1"/>
+        </g>
+      ) : (
+        <g>
+          <rect x={padTop} y="30" width={w-padTop*2} height={h-60} rx={(h-60)/2} ry={(h-60)/2} fill="url(#cartFill)" stroke="url(#cartGold)" strokeWidth="6"/>
+          <rect x={padTop} y="30" width={w-padTop*2} height={h-60} rx={(h-60)/2} ry={(h-60)/2} fill="none" stroke="#5D4220" strokeWidth="1.5"/>
+          <rect x={w-padTop-3} y="20" width="14" height={h-40} rx="3" fill="url(#cartGold)" stroke="#5D4220" strokeWidth="1"/>
+        </g>
+      )}
+      {tokens.length > 0 && (isVert ? (() => {
+        const n = tokens.length;
+        const cellH = Math.min(innerH / Math.max(n, 1), 80);
+        const totalH = cellH * n;
+        const startY = padTop + (innerH - totalH) / 2 + cellH * 0.75;
+        return tokens.map((t, i) => (
+          <text key={i} x={w/2} y={startY + i * cellH} textAnchor="middle" style={{fontFamily: "Noto Sans Egyptian Hieroglyphs, serif", fontSize: Math.min(cellH * 0.85, 64)}} fill="#E8C36E">{t.glyph}</text>
+        ));
+      })() : (() => {
+        const n = tokens.length;
+        const cellW = Math.min((w - padTop*2 - 40) / Math.max(n, 1), 80);
+        const totalW = cellW * n;
+        const startX = (w - totalW) / 2 + cellW / 2;
+        return tokens.map((t, i) => (
+          <text key={i} x={startX + i * cellW} y={h/2 + 22} textAnchor="middle" style={{fontFamily: "Noto Sans Egyptian Hieroglyphs, serif", fontSize: Math.min(cellW * 0.85, 64)}} fill="#E8C36E">{t.glyph}</text>
+        ));
+      })())}
+      {tokens.length === 0 && (
+        <text x={w/2} y={h/2} textAnchor="middle" fill="#9A8763" fontSize="14" fontFamily="Cinzel" letterSpacing="3">enter a name</text>
+      )}
+    </svg>
+  );
+}
+
+const cStyles = {
+  wrap: { padding: "28px 32px", marginBottom: 28 },
+  header: { marginBottom: 28 },
+  title: { fontFamily: "var(--font-display)", fontSize: 28, color: "var(--papyrus)", margin: "8px 0", letterSpacing: "0.04em" },
+  sub: { color: "var(--text-dim)", fontSize: 14, maxWidth: 580, lineHeight: 1.55 },
+  body: { display: "grid", gridTemplateColumns: "minmax(280px, 360px) 1fr", gap: 36, alignItems: "start" },
+  controls: { display: "flex", flexDirection: "column" },
+  toggle: { display: "flex", gap: 6, background: "var(--bg-deep)", padding: 4, borderRadius: 8, border: "1px solid var(--hairline)" },
+  tBtn: { flex: 1, padding: "10px 12px", fontSize: 12, fontWeight: 600, color: "var(--text-mute)", borderRadius: 6, letterSpacing: "0.1em", textTransform: "uppercase" },
+  tBtnA: { background: "rgba(212,162,76,0.15)", color: "var(--papyrus)", boxShadow: "inset 0 0 0 1px var(--hairline-strong)" },
+  actions: { display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" },
+  breakdown: { marginTop: 28, paddingTop: 20, borderTop: "1px solid var(--hairline)" },
+  bdRow: { display: "grid", gridTemplateColumns: "32px 48px 1fr", alignItems: "center", gap: 12, padding: "6px 0" },
+  bdLetter: { fontFamily: "var(--font-display)", fontWeight: 700, color: "var(--gold)", letterSpacing: "0.1em" },
+  bdGlyph: { fontFamily: "var(--font-glyph)", fontSize: 28, color: "var(--gold-bright)" },
+  bdName: { fontSize: 13, color: "var(--text-mute)" },
+  display: { background: "radial-gradient(ellipse at center, rgba(212,162,76,0.08), transparent 70%)", minHeight: 480, display: "grid", placeItems: "center", padding: 24 },
+};
+
+Object.assign(window, { DailyGlyphCard, Translator, Cartouche });
+// Learn screens: Alphabet · Lessons · Pharaohs
+function Alphabet() {
+  const [selected, setSelected] = React.useState(null);
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div className="h-eyebrow">Reference</div>
+        <h1 className="page-title">The Egyptian Alphabet</h1>
+        <p className="page-subtitle">All 26 English letters, each matched to the closest Egyptian sound sign — some letters share a sign, since Egyptian had no C, V or written vowels. Tap any sign to hear its sound, see its meaning, and learn the picture behind the letter.</p>
+      </div>
+      <div style={aStyles.grid}>
+        {window.ALPHABET.map((a, i) => (
+          <button key={a.letter} onClick={() => { setSelected(a); speak(a.sound); }} aria-label={`${a.letter}: ${a.name}, sounds like ${a.sound}`}
+            style={{...aStyles.tile, ...(selected?.letter === a.letter ? aStyles.tileActive : {}), animation: `glyphCarveIn 0.5s ease-out ${i * 0.02}s backwards`}}>
+            <div style={aStyles.tileLetter}>{a.letter}</div>
+            <div className="glyph" style={aStyles.tileGlyph}>{a.glyph}</div>
+            <div style={aStyles.tileSound}>/{a.sound}/</div>
+          </button>
+        ))}
+      </div>
+      {selected && (
+        <div className="surface-stone fade-up" style={aStyles.detail}>
+          <div style={aStyles.detailLeft}><div className="glyph glyph-glow" style={aStyles.detailGlyph}>{selected.glyph}</div></div>
+          <div style={aStyles.detailRight}>
+            <div className="h-eyebrow">Letter {selected.letter}</div>
+            <h2 style={aStyles.detailName}>{selected.name}</h2>
+            <div style={aStyles.detailSound}>Sounds like <span style={{color: "var(--gold-bright)", fontWeight: 600}}>/{selected.sound}/</span></div>
+            <p style={aStyles.detailHint}>{selected.hint}</p>
+            <div style={aStyles.detailActions}>
+              <button className="btn btn-primary" onClick={() => speak(selected.sound)}>🔊 Hear it</button>
+              <button className="btn btn-ghost" onClick={() => setSelected(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div style={aStyles.note}>
+        <div className="h-eyebrow" style={{marginBottom: 8}}>A note for scholars</div>
+        <p style={{color: "var(--text-dim)", fontSize: 14, lineHeight: 1.6, maxWidth: 720}}>Real ancient Egyptian had no letters for vowels (E, O, U) — scribes wrote only consonants. Modern translators map English vowels to the closest matching glyphs (𓇋 for E/I, 𓅱 for O/U/W) so names and messages can be written phonetically. This is how Egyptologists transliterate names like "Cleopatra" into cartouches.</p>
+      </div>
+    </div>
+  );
+}
+
+const aStyles = {
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 12 },
+  tile: { background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 12, padding: "16px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer", transition: "all 0.18s", position: "relative" },
+  tileActive: { background: "linear-gradient(180deg, rgba(212,162,76,0.18), rgba(212,162,76,0.06))", border: "1px solid var(--gold)", boxShadow: "0 0 0 3px rgba(212,162,76,0.15), 0 8px 24px rgba(212,162,76,0.2)", transform: "translateY(-2px)" },
+  tileLetter: { fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: "var(--gold)", letterSpacing: "0.1em" },
+  tileGlyph: { fontSize: 48, color: "var(--papyrus)", margin: "4px 0" },
+  tileSound: { fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-mute)" },
+  detail: { marginTop: 32, padding: "32px 40px", display: "grid", gridTemplateColumns: "auto 1fr", gap: 40, alignItems: "center" },
+  detailLeft: { minWidth: 160, display: "grid", placeItems: "center" },
+  detailGlyph: { fontSize: 140, color: "var(--gold-bright)" },
+  detailRight: { display: "flex", flexDirection: "column", gap: 8 },
+  detailName: { fontFamily: "var(--font-display)", fontSize: 36, color: "var(--papyrus)", letterSpacing: "0.04em", margin: "4px 0" },
+  detailSound: { color: "var(--text-dim)", fontSize: 16 },
+  detailHint: { color: "var(--text-dim)", fontSize: 15, lineHeight: 1.55, marginTop: 8 },
+  detailActions: { display: "flex", gap: 10, marginTop: 18 },
+  note: { marginTop: 48, padding: "24px 28px", borderLeft: "2px solid var(--gold-deep)", background: "rgba(212,162,76,0.03)", borderRadius: "0 12px 12px 0" },
+};
+
+function Lessons() {
+  const [openId, setOpenId] = React.useState(null);
+  const [completed, setCompleted] = React.useState(() => { try { return JSON.parse(localStorage.getItem("medu-completed") || "[]"); } catch { return []; } });
+  const toggleDone = (id) => {
+    setCompleted(prev => { const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]; try { localStorage.setItem("medu-completed", JSON.stringify(next)); } catch {} return next; });
+  };
+  const open = window.LESSONS.find(l => l.id === openId);
+  useDialog(!!open, () => setOpenId(null));
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div className="h-eyebrow">Lessons</div>
+        <h1 className="page-title">From scratch to scribe</h1>
+        <p className="page-subtitle">Six short lessons. By the end you'll know how hieroglyphs work, how to read them, and how they were finally cracked after 1,400 years of silence.</p>
+      </div>
+      <div style={lStyles.progress}>
+        <div style={lStyles.progressBar}><div style={{...lStyles.progressFill, width: `${(completed.length / window.LESSONS.length) * 100}%`}}/></div>
+        <div style={lStyles.progressLabel}>{completed.length} of {window.LESSONS.length} complete</div>
+      </div>
+      <div style={lStyles.grid}>
+        {window.LESSONS.map((lesson, i) => {
+          const isDone = completed.includes(lesson.id);
+          return (
+            <button key={lesson.id} onClick={() => setOpenId(lesson.id)}
+              style={{...lStyles.card, ...(isDone ? lStyles.cardDone : {}), animation: `fadeUp 0.4s ease-out ${i * 0.05}s backwards`}}>
+              <div style={lStyles.cardNum}>{String(lesson.id).padStart(2, "0")}</div>
+              <div className="glyph" style={lStyles.cardIcon}>{lesson.icon}</div>
+              <div style={lStyles.cardBody}>
+                <div style={lStyles.cardTitle}>{lesson.title}</div>
+                <div style={lStyles.cardSummary}>{lesson.summary}</div>
+                <div style={lStyles.cardMeta}><span>{lesson.duration} read</span>{isDone && <span style={lStyles.cardDoneBadge}>✓ Done</span>}</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {open && (
+        <div style={lStyles.modalBg} onClick={() => setOpenId(null)}>
+          <div className="surface-stone" style={lStyles.modal} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={open.title} tabIndex={-1} data-dialog>
+            <div style={lStyles.modalHeader}>
+              <div>
+                <div className="h-eyebrow">Lesson {String(open.id).padStart(2, "0")} · {open.duration}</div>
+                <h2 style={lStyles.modalTitle}>{open.title}</h2>
+              </div>
+              <button onClick={() => setOpenId(null)} style={lStyles.closeBtn} aria-label="Close lesson">✕</button>
+            </div>
+            <div style={lStyles.modalBody}>
+              {open.content.map((block, idx) => {
+                if (block.type === "p") return <p key={idx} style={lStyles.lessonP}>{block.text}</p>;
+                if (block.type === "tip") return <div key={idx} style={lStyles.tip}><span style={{color: "var(--gold-bright)", fontWeight: 600, marginRight: 8}}>TIP:</span>{block.text}</div>;
+                if (block.type === "showcase") return (
+                  <div key={idx} style={lStyles.showcase}>
+                    <div style={lStyles.showcaseGlyphs}>{block.glyphs.map((g, gi) => <span key={gi} className="glyph" style={lStyles.showcaseGlyph}>{g}</span>)}</div>
+                    <div style={lStyles.showcaseCaption}>{block.caption}</div>
+                  </div>
+                );
+                if (block.type === "glyphCard") return (
+                  <div key={idx} style={lStyles.glyphCard}>
+                    <span className="glyph" style={lStyles.glyphCardGlyph}>{block.glyph}</span>
+                    <div><div style={lStyles.glyphCardTitle}>{block.title}</div><div style={lStyles.glyphCardText}>{block.text}</div></div>
+                  </div>
+                );
+                return null;
+              })}
+            </div>
+            <div style={lStyles.modalFooter}>
+              <button className={completed.includes(open.id) ? "btn btn-ghost" : "btn btn-primary"} onClick={() => toggleDone(open.id)}>{completed.includes(open.id) ? "✓ Completed (undo)" : "Mark complete"}</button>
+              <button className="btn btn-ghost" onClick={() => { const idx = window.LESSONS.findIndex(l => l.id === open.id); const next = window.LESSONS[idx + 1]; if (next) setOpenId(next.id); else setOpenId(null); }}>{window.LESSONS.findIndex(l => l.id === open.id) === window.LESSONS.length - 1 ? "Finish" : "Next lesson →"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const lStyles = {
+  progress: { display: "flex", alignItems: "center", gap: 16, marginBottom: 28, padding: "14px 20px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--hairline)" },
+  progressBar: { flex: 1, height: 6, background: "var(--bg-deep)", borderRadius: 3, overflow: "hidden" },
+  progressFill: { height: "100%", background: "linear-gradient(90deg, var(--gold), var(--gold-bright))", transition: "width 0.4s ease" },
+  progressLabel: { fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--text-mute)", letterSpacing: "0.1em" },
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 },
+  card: { background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 14, padding: "22px 22px 20px", textAlign: "left", cursor: "pointer", transition: "all 0.18s", display: "grid", gridTemplateColumns: "auto auto 1fr", gap: 16, alignItems: "start", position: "relative" },
+  cardDone: { border: "1px solid var(--hairline-strong)", background: "linear-gradient(180deg, rgba(212,162,76,0.06), rgba(212,162,76,0.02))" },
+  cardNum: { fontFamily: "var(--font-display)", fontSize: 11, fontWeight: 600, letterSpacing: "0.18em", color: "var(--gold)", paddingTop: 4 },
+  cardIcon: { fontSize: 38, color: "var(--gold-bright)" },
+  cardBody: { display: "flex", flexDirection: "column", gap: 4 },
+  cardTitle: { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--papyrus)", letterSpacing: "0.02em" },
+  cardSummary: { color: "var(--text-dim)", fontSize: 13, lineHeight: 1.5 },
+  cardMeta: { fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-mute)", letterSpacing: "0.1em", marginTop: 8, display: "flex", gap: 12 },
+  cardDoneBadge: { color: "var(--gold-bright)" },
+  modalBg: { position: "fixed", inset: 0, background: "rgba(8, 5, 2, 0.7)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", display: "grid", placeItems: "center", zIndex: 100, padding: 20, overflowY: "auto" },
+  modal: { maxWidth: 720, width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column" },
+  modalHeader: { padding: "24px 32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--hairline)" },
+  modalTitle: { fontFamily: "var(--font-display)", fontSize: 28, color: "var(--papyrus)", letterSpacing: "0.03em", margin: "6px 0 0" },
+  closeBtn: { width: 36, height: 36, borderRadius: 8, background: "var(--bg-deep)", color: "var(--text-dim)", fontSize: 14, border: "1px solid var(--hairline)" },
+  modalBody: { padding: "24px 32px", overflowY: "auto", flex: 1 },
+  lessonP: { color: "var(--text)", fontSize: 16, lineHeight: 1.65, marginBottom: 16 },
+  tip: { background: "rgba(212,162,76,0.06)", borderLeft: "2px solid var(--gold)", padding: "12px 18px", borderRadius: "0 8px 8px 0", color: "var(--text)", fontSize: 14, margin: "16px 0", lineHeight: 1.55 },
+  showcase: { background: "var(--bg-deep)", border: "1px solid var(--hairline)", borderRadius: 12, padding: "24px 20px", margin: "20px 0", textAlign: "center" },
+  showcaseGlyphs: { display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap", marginBottom: 12 },
+  showcaseGlyph: { fontSize: 56, color: "var(--gold-bright)" },
+  showcaseCaption: { fontSize: 13, color: "var(--text-mute)", fontStyle: "italic" },
+  glyphCard: { display: "grid", gridTemplateColumns: "auto 1fr", gap: 18, alignItems: "center", padding: "16px 18px", background: "rgba(232,217,176,0.04)", borderRadius: 10, marginBottom: 10, border: "1px solid var(--hairline)" },
+  glyphCardGlyph: { fontSize: 56, color: "var(--gold-bright)" },
+  glyphCardTitle: { fontFamily: "var(--font-display)", fontSize: 18, color: "var(--papyrus)", marginBottom: 4 },
+  glyphCardText: { color: "var(--text-dim)", fontSize: 14, lineHeight: 1.5 },
+  modalFooter: { padding: "20px 32px", display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid var(--hairline)" },
+};
+
+function Pharaohs() {
+  const [selected, setSelected] = React.useState(null);
+  useDialog(!!selected, () => setSelected(null));
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div className="h-eyebrow">Royals</div>
+        <h1 className="page-title">The Pharaohs</h1>
+        <p className="page-subtitle">Eight rulers who shaped 3,000 years of history — boy kings, warrior pharaohs, pyramid builders, and the queen who ruled as king.</p>
+      </div>
+      <div style={pStyles.grid}>
+        {window.PHARAOHS.map((p, i) => (
+          <button key={p.name} onClick={() => setSelected(p)} style={{...pStyles.card, animation: `fadeUp 0.4s ease-out ${i * 0.04}s backwards`}}>
+            <div style={{...pStyles.cardTop, background: `linear-gradient(135deg, ${p.color}40, transparent 70%)`}}>
+              <span className="glyph" aria-hidden="true" style={{...pStyles.cardCartouche, fontSize: fitGlyphs(p.glyph, 50, 250)}}>{p.glyph}</span>
+            </div>
+            <div style={pStyles.cardBody}>
+              <div style={pStyles.cardTitle}>{p.name}</div>
+              <div style={pStyles.cardDates}>{p.dates}</div>
+              <div style={{...pStyles.cardTag, color: p.color}}>{p.title}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+      {selected && (
+        <div style={pStyles.modalBg} onClick={() => setSelected(null)}>
+          <div className="surface-stone" style={pStyles.modal} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={selected.name} tabIndex={-1} data-dialog>
+            <div style={{...pStyles.modalHero, background: `linear-gradient(135deg, ${selected.color}30, transparent 70%)`}}>
+              <span className="glyph glyph-glow" aria-hidden="true" style={{...pStyles.modalGlyph, color: selected.color, fontSize: fitGlyphs(selected.glyph, 80, 560)}}>{selected.glyph}</span>
+              <button onClick={() => setSelected(null)} style={pStyles.closeBtn} aria-label="Close">✕</button>
+            </div>
+            <div style={pStyles.modalContent}>
+              <div className="h-eyebrow" style={{color: selected.color}}>{selected.dynasty} · {selected.dates}</div>
+              <h2 style={pStyles.modalName}>{selected.name}</h2>
+              <div style={pStyles.modalTitle2}>"{selected.title}"</div>
+              <p style={pStyles.modalFact}>{selected.fact}</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const pStyles = {
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 18 },
+  card: { background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 14, overflow: "hidden", textAlign: "left", cursor: "pointer", transition: "all 0.18s", padding: 0 },
+  cardTop: { height: 160, display: "grid", placeItems: "center", borderBottom: "1px solid var(--hairline)", overflow: "hidden", padding: "0 16px" },
+  cardCartouche: { fontSize: 50, color: "var(--papyrus)", textAlign: "center", lineHeight: 1.1, textShadow: "0 0 24px rgba(232,195,110,0.3)" },
+  cardBody: { padding: "16px 18px" },
+  cardTitle: { fontFamily: "var(--font-display)", fontSize: 20, color: "var(--papyrus)", letterSpacing: "0.02em" },
+  cardDates: { fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-mute)", marginTop: 4, letterSpacing: "0.06em" },
+  cardTag: { fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 10 },
+  modalBg: { position: "fixed", inset: 0, background: "rgba(8, 5, 2, 0.75)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", zIndex: 100, padding: 20, overflowY: "auto" },
+  modal: { maxWidth: 640, width: "100%", overflow: "hidden" },
+  modalHero: { height: 220, display: "grid", placeItems: "center", position: "relative", borderBottom: "1px solid var(--hairline)" },
+  modalGlyph: { fontSize: 80, color: "var(--gold-bright)", textAlign: "center", lineHeight: 1.1, padding: 16 },
+  closeBtn: { position: "absolute", top: 16, right: 16, width: 36, height: 36, borderRadius: 8, background: "rgba(0,0,0,0.4)", color: "var(--text-dim)", fontSize: 14, border: "1px solid var(--hairline)" },
+  modalContent: { padding: "28px 32px 32px" },
+  modalName: { fontFamily: "var(--font-display)", fontSize: 36, color: "var(--papyrus)", letterSpacing: "0.04em", margin: "6px 0 4px" },
+  modalTitle2: { fontStyle: "italic", color: "var(--gold-bright)", fontSize: 16, marginBottom: 18 },
+  modalFact: { color: "var(--text-dim)", fontSize: 15, lineHeight: 1.65 },
+};
+
+Object.assign(window, { Alphabet, Lessons, Pharaohs });
+// Practice screens: Flashcards · Match Game
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+function Practice() {
+  const [mode, setMode] = React.useState("flash");
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div className="h-eyebrow">Train</div>
+        <h1 className="page-title">Practice the glyphs</h1>
+        <p className="page-subtitle">Two ways to memorize: rapid-fire flashcards, or a memory-style matching game. Earn a streak.</p>
+      </div>
+      <div style={prStyles.tabs}>
+        <button onClick={() => setMode("flash")} style={{...prStyles.tab, ...(mode === "flash" ? prStyles.tabActive : {})}}>
+          <span className="glyph" style={prStyles.tabGlyph}>𓂀</span>
+          <div><div style={prStyles.tabTitle}>Flashcards</div><div style={prStyles.tabSub}>See the glyph, pick the letter</div></div>
+        </button>
+        <button onClick={() => setMode("match")} style={{...prStyles.tab, ...(mode === "match" ? prStyles.tabActive : {})}}>
+          <span className="glyph" style={prStyles.tabGlyph}>𓊪</span>
+          <div><div style={prStyles.tabTitle}>Memory match</div><div style={prStyles.tabSub}>Pair glyphs with their letters</div></div>
+        </button>
+      </div>
+      {mode === "flash" ? <Flashcards/> : <MatchGame/>}
+    </div>
+  );
+}
+
+const prStyles = {
+  tabs: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12, marginBottom: 28 },
+  tab: { display: "flex", alignItems: "center", gap: 14, padding: "18px 20px", background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 12, cursor: "pointer", textAlign: "left", transition: "all 0.18s" },
+  tabActive: { background: "linear-gradient(180deg, rgba(212,162,76,0.15), rgba(212,162,76,0.05))", border: "1px solid var(--hairline-strong)", boxShadow: "0 0 0 1px var(--hairline-strong) inset, 0 8px 24px rgba(212,162,76,0.15)" },
+  tabGlyph: { fontSize: 36, color: "var(--gold-bright)" },
+  tabTitle: { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--papyrus)", letterSpacing: "0.02em" },
+  tabSub: { color: "var(--text-mute)", fontSize: 13, marginTop: 2 },
+};
+
+function Flashcards() {
+  const [deck] = React.useState(() => shuffle(window.PRACTICE_DECK));
+  const [idx, setIdx] = React.useState(0);
+  const [picked, setPicked] = React.useState(null);
+  const [streak, setStreak] = React.useState(0);
+  const [score, setScore] = React.useState({ right: 0, wrong: 0 });
+  const [revealing, setRevealing] = React.useState(false);
+  const card = deck[idx];
+  const isDone = idx >= deck.length;
+
+  const handlePick = (option) => {
+    if (picked) return;
+    setPicked(option);
+    setRevealing(true);
+    const correct = option === card.answer;
+    setScore(s => ({ right: s.right + (correct ? 1 : 0), wrong: s.wrong + (correct ? 0 : 1) }));
+    setStreak(s => correct ? s + 1 : 0);
+    setTimeout(() => { setPicked(null); setRevealing(false); setIdx(i => i + 1); }, 1200);
+  };
+
+  const restart = () => { setIdx(0); setScore({right:0, wrong:0}); setStreak(0); setPicked(null); };
+
+  if (isDone) {
+    const pct = Math.round((score.right / deck.length) * 100);
+    return (
+      <div className="surface-stone" style={fStyles.doneCard}>
+        <div className="glyph" style={{fontSize: 80, color: "var(--gold-bright)", marginBottom: 16}}>𓋹</div>
+        <div className="h-eyebrow">Round complete</div>
+        <div style={fStyles.doneScore}>{score.right} <span style={{color: "var(--text-mute)"}}>/ {deck.length}</span></div>
+        <div style={fStyles.donePct}>{pct}% correct</div>
+        <p style={fStyles.doneMsg}>{pct === 100 ? "Perfect — you read like a scribe of Thebes!" : pct >= 80 ? "Excellent — the gods would be proud." : pct >= 60 ? "Good — keep training, young scribe." : "Keep practicing — every scribe started here."}</p>
+        <button className="btn btn-primary" onClick={restart}>Practice again</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="surface-stone" style={fStyles.wrap}>
+      <div style={fStyles.scoreBar}>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Card</span><span style={fStyles.scoreVal}>{idx + 1} <span style={{color: "var(--text-mute)"}}>/ {deck.length}</span></span></div>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Streak</span><span style={{...fStyles.scoreVal, color: streak >= 3 ? "var(--gold-bright)" : "var(--papyrus)"}}>{streak >= 3 && "🔥 "}{streak}</span></div>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Right</span><span style={{...fStyles.scoreVal, color: "var(--gold-bright)"}}>{score.right}</span></div>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Wrong</span><span style={{...fStyles.scoreVal, color: "var(--terracotta-bright)"}}>{score.wrong}</span></div>
+      </div>
+      <div style={fStyles.cardArea}>
+        <div style={fStyles.prompt}>What letter is this glyph?</div>
+        <div key={idx} style={fStyles.glyphBox}><span className="glyph" style={fStyles.bigGlyph}>{card.glyph}</span></div>
+        <div style={fStyles.options}>
+          {card.options.map(opt => {
+            const isCorrect = opt === card.answer;
+            const isPicked = opt === picked;
+            return (
+              <button key={opt} onClick={() => handlePick(opt)} disabled={!!picked}
+                style={{...fStyles.option, ...(revealing && isCorrect ? fStyles.optionRight : {}), ...(revealing && isPicked && !isCorrect ? fStyles.optionWrong : {})}}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const fStyles = {
+  wrap: { padding: "28px 32px" },
+  scoreBar: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, paddingBottom: 24, marginBottom: 28, borderBottom: "1px solid var(--hairline)" },
+  scoreItem: { display: "flex", flexDirection: "column", gap: 4 },
+  scoreLabel: { fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--text-mute)", fontFamily: "var(--font-display)" },
+  scoreVal: { fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 600, color: "var(--papyrus)" },
+  cardArea: { display: "flex", flexDirection: "column", alignItems: "center", gap: 28, paddingTop: 12 },
+  prompt: { fontSize: 14, color: "var(--text-mute)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-display)" },
+  glyphBox: { width: "100%", maxWidth: 320, aspectRatio: "1 / 1", background: "radial-gradient(ellipse at center, rgba(212,162,76,0.12), transparent 70%), linear-gradient(180deg, #2a1f10, #15100a)", border: "1px solid var(--hairline-strong)", borderRadius: 16, display: "grid", placeItems: "center", boxShadow: "inset 0 2px 12px rgba(0,0,0,0.5), 0 20px 40px -20px rgba(0,0,0,0.6)", animation: "glyphCarveIn 0.5s ease-out" },
+  bigGlyph: { fontSize: 180, color: "var(--gold-bright)", textShadow: "0 0 24px var(--gold-glow)" },
+  options: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 12, width: "100%", maxWidth: 480 },
+  option: { padding: "18px 20px", fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 600, letterSpacing: "0.1em", color: "var(--papyrus)", background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 10, cursor: "pointer", transition: "all 0.15s" },
+  optionRight: { background: "linear-gradient(180deg, rgba(212,162,76,0.3), rgba(212,162,76,0.1))", border: "1px solid var(--gold)", color: "var(--gold-bright)", boxShadow: "0 0 0 3px rgba(212,162,76,0.2), 0 8px 24px rgba(212,162,76,0.3)" },
+  optionWrong: { background: "linear-gradient(180deg, rgba(184,85,46,0.3), rgba(184,85,46,0.1))", border: "1px solid var(--terracotta)", color: "var(--terracotta-bright)" },
+  doneCard: { padding: "48px 40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" },
+  doneScore: { fontFamily: "var(--font-display)", fontSize: 72, fontWeight: 700, color: "var(--papyrus)", marginTop: 16 },
+  donePct: { color: "var(--gold-bright)", fontSize: 18, letterSpacing: "0.1em", marginTop: 4 },
+  doneMsg: { color: "var(--text-dim)", fontSize: 15, margin: "20px 0 28px", maxWidth: 400, lineHeight: 1.55 },
+};
+
+const makeBoard = () => window.makeMatchBoard(8);
+
+function MatchGame() {
+  const [tiles, setTiles] = React.useState(() => makeBoard());
+  const [flipped, setFlipped] = React.useState([]);
+  const [matched, setMatched] = React.useState(new Set());
+  const [moves, setMoves] = React.useState(0);
+  const [startTime, setStartTime] = React.useState(Date.now());
+  const [now, setNow] = React.useState(Date.now());
+  const allMatched = matched.size === tiles.length;
+
+  React.useEffect(() => {
+    if (allMatched) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [allMatched]);
+
+  const handleFlip = (i) => {
+    if (flipped.length >= 2 || flipped.includes(i) || matched.has(i)) return;
+    const next = [...flipped, i];
+    setFlipped(next);
+    if (next.length === 2) {
+      setMoves(m => m + 1);
+      const [a, b] = next;
+      if (tiles[a].pairId === tiles[b].pairId) {
+        setTimeout(() => { setMatched(prev => new Set([...prev, a, b])); setFlipped([]); }, 500);
+      } else { setTimeout(() => setFlipped([]), 900); }
+    }
+  };
+
+  const restart = () => { setTiles(makeBoard()); setFlipped([]); setMatched(new Set()); setMoves(0); setStartTime(Date.now()); setNow(Date.now()); };
+  const seconds = Math.floor((now - startTime) / 1000);
+
+  if (allMatched) {
+    return (
+      <div className="surface-stone" style={fStyles.doneCard}>
+        <div className="glyph" style={{fontSize: 80, color: "var(--gold-bright)", marginBottom: 16}}>𓂀</div>
+        <div className="h-eyebrow">Tomb sealed</div>
+        <div style={fStyles.doneScore}>{moves} <span style={{fontSize: 32, color: "var(--text-mute)"}}>moves</span></div>
+        <div style={fStyles.donePct}>{Math.floor(seconds/60)}:{String(seconds%60).padStart(2, "0")}</div>
+        <p style={fStyles.doneMsg}>All pairs matched. A pharaoh would be proud.</p>
+        <button className="btn btn-primary" onClick={restart}>Play again</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="surface-stone" style={{padding: "28px 32px"}}>
+      <div style={mgStyles.bar}>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Moves</span><span style={fStyles.scoreVal}>{moves}</span></div>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Pairs</span><span style={fStyles.scoreVal}>{matched.size/2} <span style={{color: "var(--text-mute)"}}>/ {tiles.length/2}</span></span></div>
+        <div style={fStyles.scoreItem}><span style={fStyles.scoreLabel}>Time</span><span style={fStyles.scoreVal}>{Math.floor(seconds/60)}:{String(seconds%60).padStart(2, "0")}</span></div>
+        <button className="btn btn-ghost" onClick={restart} style={{marginLeft: "auto"}}>Restart</button>
+      </div>
+      <div style={mgStyles.board}>
+        {tiles.map((t, i) => {
+          const isOpen = flipped.includes(i) || matched.has(i);
+          const isMatched = matched.has(i);
+          return (
+            <button key={i} onClick={() => handleFlip(i)} aria-label={(flipped.includes(i) || matched.has(i)) ? `Card: ${t.kind === "glyph" ? "hieroglyph " + (window.ALPHABET.find(a => a.glyph === t.value)?.name || "") : "letter " + t.value}` : "Face-down card"} style={{...mgStyles.tile, ...(isOpen ? mgStyles.tileOpen : {}), ...(isMatched ? mgStyles.tileMatched : {})}}>
+              <div style={{...mgStyles.tileInner, transform: isOpen ? "rotateY(180deg)" : "rotateY(0)"}}>
+                <div style={mgStyles.tileBack}><span className="glyph" style={mgStyles.tileBackGlyph}>𓂀</span></div>
+                <div style={mgStyles.tileFront}>{t.kind === "glyph" ? <span className="glyph" style={mgStyles.tileGlyphChar}>{t.value}</span> : <span style={mgStyles.tileLetterChar}>{t.value}</span>}</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const mgStyles = {
+  bar: { display: "flex", alignItems: "center", gap: 32, paddingBottom: 24, marginBottom: 24, borderBottom: "1px solid var(--hairline)" },
+  board: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, maxWidth: 640, margin: "0 auto" },
+  tile: { aspectRatio: "1/1", padding: 0, background: "transparent", border: "none", perspective: 800, cursor: "pointer" },
+  tileOpen: {},
+  tileMatched: {},
+  tileInner: { width: "100%", height: "100%", position: "relative", transformStyle: "preserve-3d", transition: "transform 0.5s ease" },
+  tileBack: { position: "absolute", inset: 0, background: "linear-gradient(135deg, var(--surface-3), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 12, display: "grid", placeItems: "center", backfaceVisibility: "hidden", boxShadow: "inset 0 1px 0 rgba(232,217,176,0.04), 0 4px 12px rgba(0,0,0,0.3)" },
+  tileBackGlyph: { fontSize: 36, color: "var(--gold-deep)", opacity: 0.5 },
+  tileFront: { position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(212,162,76,0.18), rgba(212,162,76,0.04))", border: "1px solid var(--gold)", borderRadius: 12, display: "grid", placeItems: "center", backfaceVisibility: "hidden", transform: "rotateY(180deg)", boxShadow: "0 0 0 1px var(--hairline-strong), inset 0 1px 0 rgba(232,217,176,0.08), 0 6px 20px rgba(212,162,76,0.2)" },
+  tileGlyphChar: { fontSize: "clamp(28px, 7vw, 56px)", color: "var(--gold-bright)" },
+  tileLetterChar: { fontFamily: "var(--font-display)", fontSize: "clamp(24px, 5vw, 42px)", fontWeight: 700, color: "var(--papyrus)", letterSpacing: "0.1em" },
+};
+
+Object.assign(window, { Practice });
+// Main App
+const { useState, useEffect } = React;
+
+const NAV = [
+  { id: "translate", label: "Translate", glyph: "𓂀" },
+  { id: "alphabet",  label: "Alphabet",  glyph: "𓄿" },
+  { id: "cartouche", label: "Cartouche", glyph: "𓍷" },
+  { id: "lessons",   label: "Lessons",   glyph: "𓊪" },
+  { id: "pharaohs",  label: "Pharaohs",  glyph: "𓋹" },
+  { id: "practice",  label: "Practice",  glyph: "𓆣" },
+];
+
+function App() {
+  const [route, setRoute] = useState(() => { const h = window.location.hash.replace("#", ""); return NAV.some(n => n.id === h) ? h : "translate"; });
+
+  useEffect(() => { window.location.hash = route; }, [route]);
+
+  useEffect(() => {
+    const onHash = () => { const h = window.location.hash.replace("#", ""); if (NAV.some(n => n.id === h)) setRoute(h); };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  const current = NAV.find(n => n.id === route);
+
+  return (
+    <>
+      <header className="topbar">
+        <div className="topbar-inner">
+          <div className="logo" onClick={() => setRoute("translate")}>
+            <div className="logo-mark">𓂀</div>
+            <div><div className="logo-text">MEDU</div><div className="logo-tag">Words of the gods</div></div>
+          </div>
+          <nav className="nav">
+            {NAV.map(n => (
+              <button key={n.id} className={`nav-item ${route === n.id ? "active" : ""}`} onClick={() => setRoute(n.id)}>
+                <span className="glyph nav-glyph">{n.glyph}</span>
+                <span>{n.label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      <main className="page">
+        {route === "translate" && (<><window.DailyGlyphCard/><window.Translator/></>)}
+        {route === "alphabet"  && <window.Alphabet/>}
+        {route === "cartouche" && <window.Cartouche/>}
+        {route === "lessons"   && <window.Lessons/>}
+        {route === "pharaohs"  && <window.Pharaohs/>}
+        {route === "practice"  && <window.Practice/>}
+      </main>
+
+      <footer style={footerStyles.footer}>
+        <div style={footerStyles.footerInner}>
+          <div style={footerStyles.footerCol}>
+            <div className="h-eyebrow" style={{marginBottom: 6}}>MEDU NETJER</div>
+            <div style={{color: "var(--text-mute)", fontSize: 13, lineHeight: 1.55, maxWidth: 360}}>A learning playground for ancient Egyptian hieroglyphs. Translate, decode, study the pharaohs, and earn your scribe's title.</div>
+          </div>
+          <div style={footerStyles.footerCol}>
+            <div className="h-eyebrow" style={{marginBottom: 12}}>Did you know?</div>
+            <div style={{color: "var(--text-dim)", fontSize: 13, lineHeight: 1.55}}>Hieroglyphs were used for over <span style={{color: "var(--gold-bright)"}}>3,000 years</span> — longer than the modern alphabet has existed. The last one was carved in <span style={{color: "var(--gold-bright)"}}>394 CE</span>.</div>
+          </div>
+          <div style={footerStyles.footerGlyphs}>
+            <span className="glyph">𓋹</span><span className="glyph">𓊽</span><span className="glyph">𓌀</span><span className="glyph">𓂀</span><span className="glyph">𓇳</span>
+          </div>
+        </div>
+      </footer>
+
+    </>
+  );
+}
+
+const footerStyles = {
+  footer: { borderTop: "1px solid var(--hairline)", padding: "32px 28px", marginTop: 60, background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.4))" },
+  footerInner: { maxWidth: 1400, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 40, alignItems: "center" },
+  footerCol: { display: "flex", flexDirection: "column" },
+  footerGlyphs: { display: "flex", gap: 18, fontSize: 32, color: "var(--gold-deep)", opacity: 0.7, fontFamily: "var(--font-glyph)" },
+};
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);

@@ -7,6 +7,7 @@
 - [ ] `index.html` (desktop)
 - [ ] `Medu Mobile.html` (mobile)
 - [ ] `data.js` (shared glyph data + translation engine)
+- [ ] `src/` app code (ran `npm run build` and committed `dist/`)
 - [ ] `README.md`
 - [ ] Other: ___
 
@@ -19,6 +20,7 @@
 
 ## Checklist
 
+- [ ] `npm test` passes
 - [ ] Tested in at least one browser
 - [ ] No console errors
 - [ ] Both desktop and mobile still work (if touching shared data/logic)

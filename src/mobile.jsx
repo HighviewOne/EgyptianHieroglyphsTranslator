@@ -1,0 +1,622 @@
+import { useDialog, speak, fitGlyphs } from "./shared.jsx";
+
+// iOS Frame
+function IOSStatusBar({ dark = false, time = '9:41' }) {
+  const c = dark ? '#fff' : '#000';
+  return (
+    <div style={{ display: 'flex', gap: 154, alignItems: 'center', justifyContent: 'center', padding: '21px 24px 19px', boxSizing: 'border-box', position: 'relative', zIndex: 20, width: '100%' }}>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 1.5 }}>
+        <span style={{ fontFamily: '-apple-system, "SF Pro", system-ui', fontWeight: 590, fontSize: 17, lineHeight: '22px', color: c }}>{time}</span>
+      </div>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: 1, paddingRight: 1 }}>
+        <svg width="19" height="12" viewBox="0 0 19 12">
+          <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill={c}/>
+          <rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill={c}/>
+          <rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7" fill={c}/>
+          <rect x="14.4" y="0" width="3.2" height="12" rx="0.7" fill={c}/>
+        </svg>
+        <svg width="17" height="12" viewBox="0 0 17 12">
+          <path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill={c}/>
+          <path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill={c}/>
+          <circle cx="8.5" cy="10.5" r="1.5" fill={c}/>
+        </svg>
+        <svg width="27" height="13" viewBox="0 0 27 13">
+          <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke={c} strokeOpacity="0.35" fill="none"/>
+          <rect x="2" y="2" width="20" height="9" rx="2" fill={c}/>
+          <path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill={c} fillOpacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function IOSDevice({ children, width = 402, height = 874, dark = false }) {
+  return (
+    <div style={{ width, height, borderRadius: 48, overflow: 'hidden', position: 'relative', background: dark ? '#000' : '#F2F2F7', boxShadow: '0 40px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12)', fontFamily: '-apple-system, system-ui, sans-serif', WebkitFontSmoothing: 'antialiased' }}>
+      {/* dynamic island */}
+      <div style={{ position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)', width: 126, height: 37, borderRadius: 24, background: '#000', zIndex: 50 }} />
+      {/* status bar */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <IOSStatusBar dark={dark} />
+      </div>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
+      </div>
+      {/* home indicator */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 60, height: 34, display: 'flex', justifyContent: 'center', alignItems: 'flex-end', paddingBottom: 8, pointerEvents: 'none' }}>
+        <div style={{ width: 139, height: 5, borderRadius: 100, background: dark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.25)' }} />
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { IOSDevice, IOSStatusBar });
+// Mobile Screens
+const M_BG = "#15100A";
+const M_SURFACE = "rgba(255, 218, 130, 0.04)";
+const M_SURFACE_2 = "rgba(255, 218, 130, 0.08)";
+const M_HAIRLINE = "rgba(212, 162, 76, 0.15)";
+
+function ScreenHeader({ eyebrow, title, subtitle }) {
+  return (
+    <div style={{ padding: "8px 20px 20px" }}>
+      {eyebrow && <div style={{ fontFamily: "var(--font-display)", fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6 }}>{eyebrow}</div>}
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: 30, fontWeight: 700, color: "var(--papyrus)", letterSpacing: "0.03em", lineHeight: 1.05 }}>{title}</h1>
+      {subtitle && <p style={{ color: "var(--text-mute)", fontSize: 14, lineHeight: 1.45, marginTop: 8 }}>{subtitle}</p>}
+    </div>
+  );
+}
+
+function BottomSheet({ open, onClose, children, height = "70%", label = "Details" }) {
+  useDialog(open, onClose);
+  if (!open) return null;
+  // Portal into the non-scrolling screen so the sheet stays in view however far the page is scrolled.
+  const host = document.getElementById("medu-screen") || document.body;
+  return ReactDOM.createPortal(
+    <div style={{ position: "absolute", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", animation: "fadeIn 0.25s ease-out" }} onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={label} tabIndex={-1} data-dialog onClick={e => e.stopPropagation()} style={{ outline: "none",  height, background: "linear-gradient(180deg, #1f1709, #15100A)", borderTopLeftRadius: 28, borderTopRightRadius: 28, border: "1px solid var(--hairline)", borderBottom: "none", padding: "10px 0 24px", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1)", boxShadow: "0 -20px 60px rgba(0,0,0,0.5)" }}>
+        <button onClick={onClose} aria-label="Close" style={{ alignSelf: "center", padding: "6px 20px", margin: "0 auto 4px" }}><div style={{ width: 36, height: 5, borderRadius: 100, background: "rgba(212,162,76,0.3)" }}/></button>
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px 24px 0" }} className="mobile-scroll">{children}</div>
+      </div>
+    </div>,
+    host
+  );
+}
+
+function MobileTranslate() {
+  const [mode, setMode] = React.useState("toGlyph");
+  const [input, setInput] = React.useState("");
+  const [tappedGlyph, setTappedGlyph] = React.useState(null);
+  const daily = React.useMemo(() => window.getDailyGlyph(), []);
+  const tokens = mode === "toGlyph" ? window.translateToGlyphs(input) : [];
+  const englishOut = mode === "toEnglish" ? window.translateFromGlyphs(input) : "";
+
+  return (
+    <div style={{ padding: "8px 0 90px" }}>
+      {/* Daily glyph hero */}
+      <div style={{ padding: "0 16px 16px" }}>
+        <div style={{ padding: "18px 18px 16px", background: "linear-gradient(180deg, rgba(212,162,76,0.10), rgba(212,162,76,0.02))", border: "1px solid var(--hairline)", borderRadius: 20, display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", overflow: "hidden" }}>
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--gold)", fontFamily: "var(--font-display)", marginBottom: 4 }}>Glyph of the day</div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--papyrus)", letterSpacing: "0.04em" }}>{daily.name}</div>
+            <div style={{ color: "var(--gold-bright)", fontStyle: "italic", fontSize: 13, marginTop: 2 }}>"{daily.meaning}"</div>
+          </div>
+          <span className="glyph" style={{ fontSize: 64, color: "var(--gold-bright)", animation: "glow 4s ease-in-out infinite" }}>{daily.glyph}</span>
+        </div>
+      </div>
+
+      <ScreenHeader title="Translate" eyebrow="MEDU NETJER"/>
+
+      {/* Segmented control */}
+      <div style={{ padding: "0 16px 16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: 3, gap: 0, background: M_SURFACE, border: "1px solid var(--hairline)", borderRadius: 12 }}>
+          {[
+            { id: "toGlyph",   label: <><span>EN</span><span style={{opacity:0.5}}>→</span><span className="glyph" style={{fontSize:14}}>𓂀</span></> },
+            { id: "toEnglish", label: <><span className="glyph" style={{fontSize:14}}>𓂀</span><span style={{opacity:0.5}}>→</span><span>EN</span></> },
+            { id: "cartouche", label: "Cartouche" },
+          ].map(o => (
+            <button key={o.id} onClick={() => { setMode(o.id); setInput(""); }}
+              style={{ padding: "9px 8px", fontSize: 12, fontWeight: 600, letterSpacing: "0.06em", color: mode === o.id ? "var(--papyrus)" : "var(--text-mute)", background: mode === o.id ? "rgba(212,162,76,0.18)" : "transparent", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, boxShadow: mode === o.id ? "inset 0 0 0 1px var(--hairline-strong)" : "none", transition: "all 0.15s", textTransform: "uppercase" }}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {mode === "cartouche"
+        ? <CartoucheCompact input={input} setInput={setInput}/>
+        : (
+          <div style={{ padding: "0 16px" }}>
+            <div style={{ background: M_SURFACE, border: "1px solid var(--hairline)", borderRadius: 16, padding: "12px 14px", marginBottom: 12 }}>
+              <div style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--text-mute)", marginBottom: 4 }}>{mode === "toGlyph" ? "English" : "Hieroglyphs"}</div>
+              <textarea value={input} onChange={e => setInput(e.target.value)} placeholder={mode === "toGlyph" ? "Type your message..." : "Paste glyphs..."} rows={2}
+                style={{ width: "100%", background: "transparent", border: "none", outline: "none", fontSize: 17, color: "var(--papyrus)", resize: "none", letterSpacing: mode === "toGlyph" ? "0.02em" : "normal" }}/>
+            </div>
+
+            <div style={{ background: "linear-gradient(180deg, #2a1f10, #15100A)", border: "1px solid var(--hairline-strong)", borderRadius: 16, minHeight: 140, padding: 16, boxShadow: "inset 0 2px 12px rgba(0,0,0,0.4)" }}>
+              <div style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 10, fontFamily: "var(--font-display)" }}>{mode === "toGlyph" ? "In hieroglyphs" : "Translation"}</div>
+              {mode === "toGlyph" ? (
+                tokens.length === 0
+                  ? <div style={{ color: "var(--text-faint)", fontStyle: "italic", fontSize: 14, textAlign: "center", padding: "30px 0" }}>Your message will appear here.</div>
+                  : <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "flex-end" }}>
+                      {tokens.map((t, i) => {
+                        if (t.type === "space") return <span key={i} style={{width: 14}}/>;
+                        if (t.type === "punct") return <span key={i} style={{fontSize: 22, color: "var(--text-mute)"}}>{t.glyph}</span>;
+                        return (
+                          <button key={i} onClick={() => setTappedGlyph(t)} aria-label={`${t.char.toUpperCase()}: ${t.name}`} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "4px 4px", borderRadius: 6 }}>
+                            <span className="glyph" style={{ fontSize: 36, color: "var(--gold-bright)" }}>{t.glyph}</span>
+                            <span style={{ fontSize: 8, color: "var(--text-mute)", letterSpacing: "0.08em", marginTop: 2 }}>{t.char.toUpperCase()}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+              ) : (
+                englishOut
+                  ? <div style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--papyrus)", letterSpacing: "0.04em", fontWeight: 600, padding: "10px 0" }}>{englishOut}</div>
+                  : <div style={{ color: "var(--text-faint)", fontStyle: "italic", fontSize: 14, textAlign: "center", padding: "30px 0" }}>Paste hieroglyphs to decode.</div>
+              )}
+            </div>
+
+            {mode === "toGlyph" && !input && (
+              <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                <span style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--text-mute)", alignSelf: "center", marginRight: 4 }}>Try:</span>
+                {["ANKH", "MY NAME IS", "PHARAOH", "NEFER HOTEP"].map(s => (
+                  <button key={s} onClick={() => setInput(s)} style={{ padding: "6px 11px", fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", color: "var(--text-dim)", background: M_SURFACE_2, border: "1px solid var(--hairline)", borderRadius: 100 }}>{s}</button>
+                ))}
+              </div>
+            )}
+
+            {mode === "toGlyph" && tokens.length > 0 && (
+              <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+                <button onClick={() => speak(input)} style={{ flex: 1, padding: "12px", background: M_SURFACE_2, border: "1px solid var(--hairline)", borderRadius: 10, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-dim)" }}>🔊 Speak</button>
+                <button onClick={() => navigator.clipboard?.writeText(tokens.map(t => t.glyph).join(""))} style={{ flex: 1, padding: "12px", background: M_SURFACE_2, border: "1px solid var(--hairline)", borderRadius: 10, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-dim)" }}>Copy</button>
+              </div>
+            )}
+          </div>
+        )
+      }
+
+      <BottomSheet open={!!tappedGlyph} onClose={() => setTappedGlyph(null)} label="Glyph details">
+        {tappedGlyph && (
+          <div style={{ textAlign: "center", padding: "12px 0 0" }}>
+            <span className="glyph" style={{ fontSize: 140, color: "var(--gold-bright)", display: "block", marginBottom: 16, animation: "glow 3s ease-in-out infinite" }}>{tappedGlyph.glyph}</span>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6 }}>{tappedGlyph.type === "word" ? "Sacred word" : "Phonetic sign"}</div>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 28, color: "var(--papyrus)", letterSpacing: "0.04em" }}>{tappedGlyph.name}</h2>
+            <div style={{ color: "var(--text-dim)", fontSize: 15, marginTop: 6 }}>Sounds like <span style={{ color: "var(--gold-bright)", fontWeight: 600 }}>"{tappedGlyph.char}"</span></div>
+            <button onClick={() => speak(tappedGlyph.char)} style={{ marginTop: 24, padding: "14px 28px", background: "linear-gradient(180deg, var(--gold-bright), var(--gold))", color: "#1A140C", fontWeight: 700, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", borderRadius: 12, boxShadow: "0 8px 24px rgba(212,162,76,0.3)" }}>🔊 Hear it</button>
+          </div>
+        )}
+      </BottomSheet>
+    </div>
+  );
+}
+
+function CartoucheCompact({ input, setInput }) {
+  const tokens = window.translateToGlyphs(input).filter(t => t.type !== "space" && t.type !== "punct");
+  return (
+    <div style={{ padding: "0 16px" }}>
+      <div style={{ background: M_SURFACE, border: "1px solid var(--hairline)", borderRadius: 16, padding: 14, marginBottom: 16 }}>
+        <div style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--text-mute)", marginBottom: 6 }}>Royal name</div>
+        <input value={input} onChange={e => setInput(e.target.value.toUpperCase().slice(0, 12))} placeholder="ALEX"
+          style={{ width: "100%", background: "transparent", border: "none", outline: "none", fontFamily: "var(--font-display)", fontSize: 22, letterSpacing: "0.12em", color: "var(--papyrus)", textAlign: "center" }}/>
+      </div>
+      <div style={{ display: "grid", placeItems: "center", padding: "20px 0" }}>
+        <svg viewBox="0 0 200 380" style={{ width: "70%", maxWidth: 240 }}>
+          <defs>
+            <linearGradient id="cartGoldM" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#E8C36E"/><stop offset="50%" stopColor="#D4A24C"/><stop offset="100%" stopColor="#8C6A2A"/>
+            </linearGradient>
+            <linearGradient id="cartFillM" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#2A1F0E"/><stop offset="100%" stopColor="#15100A"/>
+            </linearGradient>
+          </defs>
+          <rect x="18" y="20" width="164" height="320" rx="82" ry="82" fill="url(#cartFillM)" stroke="url(#cartGoldM)" strokeWidth="5"/>
+          <rect x="18" y="20" width="164" height="320" rx="82" ry="82" fill="none" stroke="#5D4220" strokeWidth="1"/>
+          <rect x="10" y="340" width="180" height="12" rx="3" fill="url(#cartGoldM)" stroke="#5D4220" strokeWidth="0.8"/>
+          {tokens.length === 0 && <text x="100" y="186" textAnchor="middle" fill="#9A8763" fontSize="11" letterSpacing="3" fontFamily="Cinzel">your name</text>}
+          {tokens.length > 0 && (() => {
+            const n = tokens.length;
+            const cellH = Math.min(280 / n, 60);
+            const totalH = cellH * n;
+            const startY = 30 + (310 - totalH) / 2 + cellH * 0.78;
+            return tokens.map((t, i) => (
+              <text key={i} x="100" y={startY + i * cellH} textAnchor="middle" style={{fontFamily: "Noto Sans Egyptian Hieroglyphs, serif", fontSize: Math.min(cellH * 0.78, 50)}} fill="#E8C36E">{t.glyph}</text>
+            ));
+          })()}
+        </svg>
+      </div>
+      {input && (
+        <div style={{ background: M_SURFACE, border: "1px solid var(--hairline)", borderRadius: 12, padding: "10px 14px", marginTop: 8 }}>
+          <div style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--text-mute)", marginBottom: 8 }}>Letter by letter</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {tokens.map((t, i) => (
+              <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "4px 6px" }}>
+                <span className="glyph" style={{ fontSize: 26, color: "var(--gold-bright)" }}>{t.glyph}</span>
+                <span style={{ fontSize: 10, color: "var(--text-mute)", marginTop: 2, letterSpacing: "0.1em" }}>{t.char.toUpperCase()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileAlphabet() {
+  const [selected, setSelected] = React.useState(null);
+  return (
+    <div style={{ padding: "0 0 90px" }}>
+      <ScreenHeader eyebrow="Reference" title="The Alphabet" subtitle="All 26 English letters, each matched to the closest Egyptian sound sign — some letters share one. Tap any sign to hear it and learn the picture origin."/>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, padding: "0 16px" }}>
+        {window.ALPHABET.map((a) => (
+          <button key={a.letter} onClick={() => { setSelected(a); speak(a.sound); }} aria-label={`${a.letter}: ${a.name}, sounds like ${a.sound}`}
+            style={{ padding: "12px 6px", background: M_SURFACE, border: "1px solid var(--hairline)", borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "all 0.15s" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 11, fontWeight: 700, color: "var(--gold)", letterSpacing: "0.1em" }}>{a.letter}</div>
+            <div className="glyph" style={{ fontSize: 30, color: "var(--papyrus)" }}>{a.glyph}</div>
+            <div style={{ fontSize: 9, color: "var(--text-mute)", letterSpacing: "0.04em", fontFamily: "monospace" }}>/{a.sound}/</div>
+          </button>
+        ))}
+      </div>
+      <BottomSheet open={!!selected} onClose={() => setSelected(null)} height="65%" label="Letter details">
+        {selected && (
+          <div style={{ textAlign: "center", padding: "12px 0 0" }}>
+            <span className="glyph" style={{ fontSize: 140, color: "var(--gold-bright)", display: "block", marginBottom: 12, animation: "glow 3s ease-in-out infinite" }}>{selected.glyph}</span>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 11, letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6 }}>Letter {selected.letter}</div>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 30, color: "var(--papyrus)", letterSpacing: "0.04em" }}>{selected.name}</h2>
+            <div style={{ color: "var(--text-dim)", fontSize: 15, marginTop: 6 }}>Sounds like <span style={{ color: "var(--gold-bright)", fontWeight: 600 }}>/{selected.sound}/</span></div>
+            <p style={{ color: "var(--text-dim)", fontSize: 14, lineHeight: 1.55, marginTop: 20, padding: "0 8px" }}>{selected.hint}</p>
+            <button onClick={() => speak(selected.sound)} style={{ marginTop: 24, padding: "14px 32px", background: "linear-gradient(180deg, var(--gold-bright), var(--gold))", color: "#1A140C", fontWeight: 700, fontSize: 13, letterSpacing: "0.14em", textTransform: "uppercase", borderRadius: 12, boxShadow: "0 8px 24px rgba(212,162,76,0.3)" }}>🔊 Hear it</button>
+          </div>
+        )}
+      </BottomSheet>
+    </div>
+  );
+}
+
+function shuffleM(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+function MobilePractice() {
+  const [mode, setMode] = React.useState("flash");
+  return (
+    <div style={{ padding: "0 0 90px" }}>
+      <ScreenHeader eyebrow="Train" title="Practice"/>
+      <div style={{ padding: "0 16px 16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", padding: 3, background: M_SURFACE, border: "1px solid var(--hairline)", borderRadius: 12 }}>
+          {[{ id: "flash", label: "Flashcards", glyph: "𓂀" }, { id: "match", label: "Match", glyph: "𓊪" }].map(o => (
+            <button key={o.id} onClick={() => setMode(o.id)}
+              style={{ padding: "10px 8px", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", color: mode === o.id ? "var(--papyrus)" : "var(--text-mute)", background: mode === o.id ? "rgba(212,162,76,0.18)" : "transparent", borderRadius: 9, textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, boxShadow: mode === o.id ? "inset 0 0 0 1px var(--hairline-strong)" : "none" }}>
+              <span className="glyph" style={{ fontSize: 16, color: "var(--gold)" }}>{o.glyph}</span>{o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {mode === "flash" ? <MobileFlashcards/> : <MobileMatch/>}
+    </div>
+  );
+}
+
+function MobileFlashcards() {
+  const [deck] = React.useState(() => shuffleM(window.PRACTICE_DECK));
+  const [idx, setIdx] = React.useState(0);
+  const [picked, setPicked] = React.useState(null);
+  const [score, setScore] = React.useState({ right: 0, wrong: 0 });
+  const [streak, setStreak] = React.useState(0);
+  const card = deck[idx];
+  const done = idx >= deck.length;
+
+  const handlePick = (opt) => {
+    if (picked) return;
+    setPicked(opt);
+    const correct = opt === card.answer;
+    setScore(s => ({ right: s.right + (correct ? 1 : 0), wrong: s.wrong + (correct ? 0 : 1) }));
+    setStreak(s => correct ? s + 1 : 0);
+    setTimeout(() => { setPicked(null); setIdx(i => i + 1); }, 1100);
+  };
+
+  if (done) return (
+    <div style={{ padding: "20px 16px" }}>
+      <div style={{ padding: "36px 20px", background: "linear-gradient(180deg, rgba(212,162,76,0.10), rgba(212,162,76,0.02))", border: "1px solid var(--hairline-strong)", borderRadius: 20, textAlign: "center" }}>
+        <span className="glyph" style={{ fontSize: 80, color: "var(--gold-bright)", animation: "glow 3s ease-in-out infinite" }}>𓋹</span>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--gold)", marginTop: 12 }}>Round complete</div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 56, fontWeight: 700, color: "var(--papyrus)", marginTop: 8 }}>{score.right}<span style={{ color: "var(--text-mute)", fontSize: 28 }}> / {deck.length}</span></div>
+        <p style={{ color: "var(--text-dim)", fontSize: 14, marginTop: 12, lineHeight: 1.5 }}>{score.right >= deck.length * 0.8 ? "Excellent — the gods would be proud." : "Keep practicing, young scribe."}</p>
+        <button onClick={() => { setIdx(0); setScore({right:0,wrong:0}); setStreak(0); }} style={{ marginTop: 20, padding: "14px 32px", background: "linear-gradient(180deg, var(--gold-bright), var(--gold))", color: "#1A140C", fontWeight: 700, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", borderRadius: 12 }}>Try again</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "0 16px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", padding: "12px 14px", background: M_SURFACE, border: "1px solid var(--hairline)", borderRadius: 12, marginBottom: 16 }}>
+        {[
+          { l: "Card", v: `${idx+1}/${deck.length}` },
+          { l: "Streak", v: streak >= 3 ? `🔥 ${streak}` : streak, color: streak >= 3 ? "var(--gold-bright)" : null },
+          { l: "Right", v: score.right, color: "var(--gold-bright)" },
+          { l: "Wrong", v: score.wrong, color: "var(--terracotta)" },
+        ].map((s, i) => (
+          <div key={i} style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--text-mute)", fontFamily: "var(--font-display)" }}>{s.l}</div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: s.color || "var(--papyrus)", marginTop: 2 }}>{s.v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background: "radial-gradient(ellipse at center, rgba(212,162,76,0.15), transparent 70%), linear-gradient(180deg, #2a1f10, #15100A)", border: "1px solid var(--hairline-strong)", borderRadius: 20, padding: "30px 20px", textAlign: "center", boxShadow: "inset 0 2px 12px rgba(0,0,0,0.5)", marginBottom: 18 }}>
+        <div style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--text-mute)", marginBottom: 18, fontFamily: "var(--font-display)" }}>What letter is this?</div>
+        <span key={idx} className="glyph" style={{ fontSize: 140, color: "var(--gold-bright)", display: "inline-block", textShadow: "0 0 24px var(--gold-glow)" }}>{card.glyph}</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+        {card.options.map(opt => {
+          const isCorrect = opt === card.answer;
+          const isPicked = opt === picked;
+          const reveal = !!picked;
+          return (
+            <button key={opt} disabled={!!picked} onClick={() => handlePick(opt)}
+              style={{ padding: "18px", fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700, letterSpacing: "0.12em", color: reveal && isCorrect ? "var(--gold-bright)" : reveal && isPicked ? "var(--terracotta)" : "var(--papyrus)", background: reveal && isCorrect ? "linear-gradient(180deg, rgba(212,162,76,0.3), rgba(212,162,76,0.1))" : reveal && isPicked ? "linear-gradient(180deg, rgba(184,85,46,0.3), rgba(184,85,46,0.1))" : M_SURFACE, border: `1px solid ${reveal && isCorrect ? "var(--gold)" : reveal && isPicked ? "var(--terracotta)" : "var(--hairline)"}`, borderRadius: 12, transition: "all 0.2s" }}>{opt}</button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MobileMatch() {
+  const [tiles, setTiles] = React.useState(() => window.makeMatchBoard(6));
+  const [flipped, setFlipped] = React.useState([]);
+  const [matched, setMatched] = React.useState(new Set());
+  const [moves, setMoves] = React.useState(0);
+
+  const handleFlip = (i) => {
+    if (flipped.length >= 2 || flipped.includes(i) || matched.has(i)) return;
+    const next = [...flipped, i];
+    setFlipped(next);
+    if (next.length === 2) {
+      setMoves(m => m + 1);
+      const [a, b] = next;
+      if (tiles[a].pairId === tiles[b].pairId) {
+        setTimeout(() => { setMatched(prev => new Set([...prev, a, b])); setFlipped([]); }, 500);
+      } else { setTimeout(() => setFlipped([]), 850); }
+    }
+  };
+
+  if (matched.size === tiles.length) return (
+    <div style={{ padding: "20px 16px" }}>
+      <div style={{ padding: "36px 20px", background: "linear-gradient(180deg, rgba(212,162,76,0.10), rgba(212,162,76,0.02))", border: "1px solid var(--hairline-strong)", borderRadius: 20, textAlign: "center" }}>
+        <span className="glyph" style={{ fontSize: 80, color: "var(--gold-bright)" }}>𓂀</span>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--gold)", marginTop: 12 }}>Tomb sealed</div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 56, fontWeight: 700, color: "var(--papyrus)", marginTop: 8 }}>{moves}<span style={{ color: "var(--text-mute)", fontSize: 22 }}> moves</span></div>
+        <button onClick={() => { setTiles(window.makeMatchBoard(6)); setFlipped([]); setMatched(new Set()); setMoves(0); }} style={{ marginTop: 24, padding: "14px 32px", background: "linear-gradient(180deg, var(--gold-bright), var(--gold))", color: "#1A140C", fontWeight: 700, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", borderRadius: 12 }}>Play again</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "0 16px" }}>
+      <div style={{ display: "flex", justifyContent: "space-around", padding: "12px 16px", background: M_SURFACE, border: "1px solid var(--hairline)", borderRadius: 12, marginBottom: 16 }}>
+        {[{ l: "Moves", v: moves }, { l: "Pairs", v: `${matched.size/2}/${tiles.length/2}` }].map((s, i) => (
+          <div key={i} style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--text-mute)", fontFamily: "var(--font-display)" }}>{s.l}</div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--papyrus)" }}>{s.v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+        {tiles.map((t, i) => {
+          const isOpen = flipped.includes(i) || matched.has(i);
+          return (
+            <button key={i} onClick={() => handleFlip(i)} aria-label={(flipped.includes(i) || matched.has(i)) ? `Card: ${t.kind === "glyph" ? "hieroglyph " + (window.ALPHABET.find(a => a.glyph === t.value)?.name || "") : "letter " + t.value}` : "Face-down card"} style={{ aspectRatio: "1/1", padding: 0, perspective: 800, background: "transparent" }}>
+              <div style={{ width: "100%", height: "100%", position: "relative", transformStyle: "preserve-3d", transform: isOpen ? "rotateY(180deg)" : "rotateY(0)", transition: "transform 0.5s" }}>
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #322516, #1A140C)", border: "1px solid var(--hairline)", borderRadius: 10, display: "grid", placeItems: "center", backfaceVisibility: "hidden" }}>
+                  <span className="glyph" style={{ fontSize: 22, color: "var(--gold-deep)", opacity: 0.5 }}>𓂀</span>
+                </div>
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(212,162,76,0.18), rgba(212,162,76,0.04))", border: "1px solid var(--gold)", borderRadius: 10, display: "grid", placeItems: "center", backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
+                  {t.kind === "glyph"
+                    ? <span className="glyph" style={{ fontSize: 30, color: "var(--gold-bright)" }}>{t.value}</span>
+                    : <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--papyrus)", letterSpacing: "0.1em" }}>{t.value}</span>}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MobileDiscover() {
+  const [openLesson, setOpenLesson] = React.useState(null);
+  const [openPharaoh, setOpenPharaoh] = React.useState(null);
+  const [completed, setCompleted] = React.useState(() => { try { return JSON.parse(localStorage.getItem("medu-mobile-completed") || "[]"); } catch { return []; } });
+
+  const toggleDone = (id) => {
+    setCompleted(prev => { const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]; try { localStorage.setItem("medu-mobile-completed", JSON.stringify(next)); } catch {} return next; });
+  };
+
+  return (
+    <div style={{ padding: "0 0 90px" }}>
+      <ScreenHeader eyebrow="Discover" title="Explore"/>
+
+      {/* Pharaohs horizontal scroll */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ padding: "0 20px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--papyrus)", letterSpacing: "0.02em" }}>Pharaohs</div>
+          <div style={{ fontSize: 11, color: "var(--text-mute)", letterSpacing: "0.08em" }}>{window.PHARAOHS.length} rulers</div>
+        </div>
+        <div className="mobile-scroll" style={{ display: "flex", gap: 12, overflowX: "auto", padding: "0 16px 8px" }}>
+          {window.PHARAOHS.map(p => (
+            <button key={p.name} onClick={() => setOpenPharaoh(p)}
+              style={{ flexShrink: 0, width: 170, background: "linear-gradient(180deg, var(--surface-2), var(--surface))", border: "1px solid var(--hairline)", borderRadius: 14, padding: 0, overflow: "hidden", textAlign: "left" }}>
+              <div style={{ height: 100, padding: "0 12px", background: `linear-gradient(135deg, ${p.color}40, transparent 70%)`, display: "grid", placeItems: "center", borderBottom: "1px solid var(--hairline)" }}>
+                <span className="glyph" aria-hidden="true" style={{ fontSize: fitGlyphs(p.glyph, 28, 140), color: "var(--papyrus)", textAlign: "center", lineHeight: 1.1, textShadow: "0 0 12px rgba(232,195,110,0.3)" }}>{p.glyph}</span>
+              </div>
+              <div style={{ padding: "10px 12px" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 15, color: "var(--papyrus)", letterSpacing: "0.02em" }}>{p.name}</div>
+                <div style={{ fontSize: 10, color: p.color, marginTop: 4, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }}>{p.title}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Lessons */}
+      <div style={{ padding: "0 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--papyrus)", letterSpacing: "0.02em" }}>Lessons</div>
+          <div style={{ fontSize: 11, color: "var(--text-mute)", letterSpacing: "0.08em" }}>{completed.length}/{window.LESSONS.length} done</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {window.LESSONS.map(l => {
+            const isDone = completed.includes(l.id);
+            return (
+              <button key={l.id} onClick={() => setOpenLesson(l)}
+                style={{ display: "grid", gridTemplateColumns: "auto auto 1fr auto", gap: 12, alignItems: "center", padding: "14px", background: M_SURFACE, border: "1px solid var(--hairline)", borderRadius: 14, textAlign: "left" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 10, fontWeight: 600, color: "var(--gold)", letterSpacing: "0.16em", minWidth: 18 }}>{String(l.id).padStart(2, "0")}</div>
+                <span className="glyph" style={{ fontSize: 28, color: "var(--gold-bright)" }}>{l.icon}</span>
+                <div>
+                  <div style={{ fontFamily: "var(--font-display)", fontSize: 15, color: "var(--papyrus)", letterSpacing: "0.02em" }}>{l.title}</div>
+                  <div style={{ fontSize: 12, color: "var(--text-mute)", marginTop: 2 }}>{l.summary}</div>
+                </div>
+                <div style={{ color: "var(--text-mute)", fontSize: 14 }}>{isDone ? <span style={{color:"var(--gold-bright)"}}>✓</span> : "›"}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <BottomSheet open={!!openLesson} onClose={() => setOpenLesson(null)} height="85%" label="Lesson">
+        {openLesson && (
+          <div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 10, letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--gold)" }}>Lesson {String(openLesson.id).padStart(2, "0")} · {openLesson.duration}</div>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, color: "var(--papyrus)", letterSpacing: "0.04em", marginTop: 4, marginBottom: 18 }}>{openLesson.title}</h2>
+            {openLesson.content.map((b, i) => {
+              if (b.type === "p") return <p key={i} style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.6, marginBottom: 14 }}>{b.text}</p>;
+              if (b.type === "tip") return <div key={i} style={{ background: "rgba(212,162,76,0.06)", borderLeft: "2px solid var(--gold)", padding: "10px 14px", borderRadius: "0 8px 8px 0", color: "var(--text)", fontSize: 13, margin: "12px 0" }}><strong style={{color:"var(--gold-bright)"}}>TIP: </strong>{b.text}</div>;
+              if (b.type === "showcase") return <div key={i} style={{ background: "var(--bg-deep)", border: "1px solid var(--hairline)", borderRadius: 12, padding: "18px 14px", margin: "14px 0", textAlign: "center" }}><div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>{b.glyphs.map((g, gi) => <span key={gi} className="glyph" style={{ fontSize: 38, color: "var(--gold-bright)" }}>{g}</span>)}</div><div style={{ fontSize: 11, color: "var(--text-mute)", fontStyle: "italic" }}>{b.caption}</div></div>;
+              if (b.type === "glyphCard") return <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 14, alignItems: "center", padding: "12px 14px", background: "rgba(232,217,176,0.04)", borderRadius: 10, marginBottom: 8, border: "1px solid var(--hairline)" }}><span className="glyph" style={{ fontSize: 44, color: "var(--gold-bright)" }}>{b.glyph}</span><div><div style={{ fontFamily: "var(--font-display)", fontSize: 16, color: "var(--papyrus)", marginBottom: 2 }}>{b.title}</div><div style={{ color: "var(--text-dim)", fontSize: 13, lineHeight: 1.45 }}>{b.text}</div></div></div>;
+              return null;
+            })}
+            <button onClick={() => toggleDone(openLesson.id)} style={{ marginTop: 12, width: "100%", padding: "14px", background: completed.includes(openLesson.id) ? "transparent" : "linear-gradient(180deg, var(--gold-bright), var(--gold))", color: completed.includes(openLesson.id) ? "var(--text-dim)" : "#1A140C", fontWeight: 700, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", borderRadius: 12, border: completed.includes(openLesson.id) ? "1px solid var(--hairline-strong)" : "none" }}>{completed.includes(openLesson.id) ? "✓ Completed" : "Mark complete"}</button>
+          </div>
+        )}
+      </BottomSheet>
+
+      <BottomSheet open={!!openPharaoh} onClose={() => setOpenPharaoh(null)} height="75%" label="Pharaoh">
+        {openPharaoh && (
+          <div style={{ textAlign: "center" }}>
+            <div style={{ padding: "20px 0", background: `radial-gradient(ellipse at center, ${openPharaoh.color}30, transparent 70%)`, borderRadius: 16, marginBottom: 18 }}>
+              <span className="glyph" aria-hidden="true" style={{ fontSize: fitGlyphs(openPharaoh.glyph, 56, 300), color: openPharaoh.color, lineHeight: 1.1, display: "block", textShadow: `0 0 24px ${openPharaoh.color}50` }}>{openPharaoh.glyph}</span>
+            </div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 10, letterSpacing: "0.24em", textTransform: "uppercase", color: openPharaoh.color, marginBottom: 4 }}>{openPharaoh.dynasty} · {openPharaoh.dates}</div>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 30, color: "var(--papyrus)", letterSpacing: "0.04em" }}>{openPharaoh.name}</h2>
+            <div style={{ fontStyle: "italic", color: "var(--gold-bright)", fontSize: 14, marginTop: 4, marginBottom: 16 }}>"{openPharaoh.title}"</div>
+            <p style={{ color: "var(--text-dim)", fontSize: 14, lineHeight: 1.6, textAlign: "left", padding: "0 4px" }}>{openPharaoh.fact}</p>
+          </div>
+        )}
+      </BottomSheet>
+    </div>
+  );
+}
+
+Object.assign(window, { MobileTranslate, MobileAlphabet, MobilePractice, MobileDiscover, ScreenHeader, BottomSheet });
+// Mobile App Shell
+const { useState, useEffect } = React;
+
+const TABS = [
+  { id: "translate", label: "Translate", glyph: "𓂀" },
+  { id: "alphabet",  label: "Alphabet",  glyph: "𓄿" },
+  { id: "practice",  label: "Practice",  glyph: "𓆣" },
+  { id: "discover",  label: "Discover",  glyph: "𓋹" },
+];
+
+const PHONE_QUERY = "(max-width: 600px)";
+
+function App() {
+  const [tab, setTab] = useState("translate");
+  const [scale, setScale] = useState(1);
+  const [isPhone, setIsPhone] = useState(() => window.matchMedia(PHONE_QUERY).matches);
+
+  useEffect(() => {
+    const fit = () => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const s = Math.min((vw - 80) / 402, (vh - 220) / 874, 1);
+      setScale(Math.max(s, 0.3));
+      setIsPhone(window.matchMedia(PHONE_QUERY).matches);
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
+
+  // The app itself; on a real phone it fills the screen, elsewhere it sits inside the iPhone mockup.
+  const screen = (
+    <div id="medu-screen" style={{ position: "relative", height: "100%", background: "#15100A", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* Status bar spacer (mockup) or the phone's own safe area */}
+      <div style={{ height: isPhone ? "env(safe-area-inset-top, 0px)" : 62, flexShrink: 0 }}/>
+
+      {/* Top bar */}
+      <div style={{ padding: isPhone ? "12px 20px 8px" : "0 20px 8px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        <div aria-hidden="true" style={{ width: 28, height: 28, borderRadius: 7, background: "linear-gradient(135deg, #E8C36E, #8C6A2A)", display: "grid", placeItems: "center", fontFamily: "var(--font-glyph)", fontSize: 17, color: "#0E0A05" }}>𓂀</div>
+        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 14, letterSpacing: "0.28em", color: "var(--papyrus)" }}>MEDU</h1>
+      </div>
+
+      {/* Content */}
+      <main className="mobile-scroll" style={{ flex: 1, overflowY: "auto", position: "relative" }}>
+        {tab === "translate" && <MobileTranslate/>}
+        {tab === "alphabet"  && <MobileAlphabet/>}
+        {tab === "practice"  && <MobilePractice/>}
+        {tab === "discover"  && <MobileDiscover/>}
+      </main>
+
+      {/* Bottom tab bar */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: isPhone ? "8px 16px calc(12px + env(safe-area-inset-bottom, 0px))" : "8px 16px 28px", background: "linear-gradient(180deg, rgba(15,10,5,0.0), rgba(15,10,5,0.95) 30%)", zIndex: 100, pointerEvents: "none" }}>
+        <nav aria-label="Sections" style={{ display: "flex", background: "rgba(40,30,18,0.85)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)", border: "1px solid var(--hairline-strong)", borderRadius: 22, padding: 6, pointerEvents: "auto", boxShadow: "0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(232,217,176,0.06)" }}>
+          {TABS.map(t => {
+            const active = tab === t.id;
+            return (
+              <button key={t.id} onClick={() => setTab(t.id)} aria-current={active ? "page" : undefined}
+                style={{ flex: 1, padding: "8px 4px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: active ? "linear-gradient(180deg, rgba(212,162,76,0.22), rgba(212,162,76,0.08))" : "transparent", borderRadius: 16, transition: "all 0.2s", boxShadow: active ? "inset 0 0 0 1px var(--hairline-strong)" : "none" }}>
+                <span className="glyph" aria-hidden="true" style={{ fontSize: 22, color: active ? "var(--gold-bright)" : "var(--text-mute)", textShadow: active ? "0 0 12px var(--gold-glow)" : "none", transition: "all 0.2s" }}>{t.glyph}</span>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: 9, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: active ? "var(--papyrus)" : "var(--text-mute)" }}>{t.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
+  );
+
+  if (isPhone) return <div style={{ height: "100dvh" }}>{screen}</div>;
+
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "30px 0", gap: 24 }}>
+      {/* Wordmark */}
+      <div style={{ textAlign: "center", opacity: 0.9 }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
+          <div aria-hidden="true" style={{ width: 32, height: 32, borderRadius: 7, background: "linear-gradient(135deg, #E8C36E, #8C6A2A)", display: "grid", placeItems: "center", fontFamily: "var(--font-glyph)", fontSize: 20, color: "#0E0A05", boxShadow: "0 0 0 1px #8C6A2A, 0 4px 14px rgba(212,162,76,0.35)" }}>𓂀</div>
+          <div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 18, letterSpacing: "0.32em", color: "var(--papyrus)" }}>MEDU</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--text-mute)", marginTop: 2 }}>iOS · Words of the gods</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Device */}
+      <div style={{ width: 402 * scale, height: 874 * scale }}>
+        <div style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: 402, height: 874 }}>
+          <IOSDevice width={402} height={874} dark={true}>{screen}</IOSDevice>
+        </div>
+      </div>
+
+      {/* Footer hint */}
+      <div style={{ textAlign: "center", color: "var(--text-mute)", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", fontFamily: "var(--font-display)", opacity: 0.7 }}>
+        Tap around — every screen is live · open on a phone for the full-screen app
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);

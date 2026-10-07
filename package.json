@@ -1,0 +1,14 @@
+{
+  "name": "medu",
+  "private": true,
+  "description": "MEDU — Egyptian hieroglyph translator. Build compiles src/*.jsx into dist/*.js.",
+  "scripts": {
+    "build": "esbuild src/desktop.jsx src/mobile.jsx --bundle --outdir=dist --format=iife --target=es2019 --minify --charset=utf8 --jsx-factory=React.createElement --jsx-fragment=React.Fragment",
+    "test": "node --test tests/*.test.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}
