@@ -1,4 +1,4 @@
-import { useDialog, speak, fitGlyphs } from "./shared.jsx";
+import { useDialog, speak, speakSound, speakToken, fitGlyphs, useCompletedLessons } from "./shared.jsx";
 
 // Translate + Cartouche + Daily Glyph screens
 function DailyGlyphCard() {
@@ -35,6 +35,11 @@ function Translator() {
   const [copied, setCopied] = React.useState(false);
 
   const shown = direction === "toGlyph" ? window.translateToGlyphs(input) : [];
+  // Stagger the carve-in only across glyphs that just appeared, capped, so typing at
+  // the end of a long message shows the new glyph right away.
+  const prevCount = React.useRef(0);
+  React.useEffect(() => { prevCount.current = shown.length; });
+  const revealDelay = (idx) => Math.min(Math.max(0, idx - prevCount.current), 10) * 60;
   const englishOut = direction === "toEnglish" ? window.translateFromGlyphs(input) : "";
 
   const handleCopy = async () => {
@@ -79,9 +84,9 @@ function Translator() {
                   if (tok.type === "space") return <span key={idx} style={{display:"inline-block", width: 24}}/>;
                   if (tok.type === "punct") return <span key={idx} style={tStyles.punct}>{tok.glyph}</span>;
                   return (
-                    <button key={idx} style={{...tStyles.glyphCell, animationDelay: `${idx * 70}ms`, ...(hovered === idx ? tStyles.glyphCellHover : {})}}
+                    <button key={idx} style={{...tStyles.glyphCell, animationDelay: `${revealDelay(idx)}ms`, ...(hovered === idx ? tStyles.glyphCellHover : {})}}
                       onMouseEnter={() => setHovered(idx)} onMouseLeave={() => setHovered(null)} onFocus={() => setHovered(idx)}
-                      onClick={() => { setHovered(idx); speak(tok.char); }} title={`${tok.char.toUpperCase()} · ${tok.name}`}
+                      onClick={() => { setHovered(idx); speakToken(tok); }} title={`${tok.char.toUpperCase()} · ${tok.name}`}
                       aria-label={`${tok.char.toUpperCase()}: ${tok.name}. Play sound`}>
                       <span className="glyph" aria-hidden="true" style={tStyles.glyphChar}>{tok.glyph}</span>
                       <span aria-hidden="true" style={tStyles.glyphSub}>{tok.char.toUpperCase()}</span>
@@ -324,7 +329,7 @@ function Alphabet() {
       </div>
       <div style={aStyles.grid}>
         {window.ALPHABET.map((a, i) => (
-          <button key={a.letter} onClick={() => { setSelected(a); speak(a.sound); }} aria-label={`${a.letter}: ${a.name}, sounds like ${a.sound}`}
+          <button key={a.letter} onClick={() => { setSelected(a); speakSound(a.sound); }} aria-label={`${a.letter}: ${a.name}, sounds like ${a.sound}`}
             style={{...aStyles.tile, ...(selected?.letter === a.letter ? aStyles.tileActive : {}), animation: `glyphCarveIn 0.5s ease-out ${i * 0.02}s backwards`}}>
             <div style={aStyles.tileLetter}>{a.letter}</div>
             <div className="glyph" style={aStyles.tileGlyph}>{a.glyph}</div>
@@ -341,7 +346,7 @@ function Alphabet() {
             <div style={aStyles.detailSound}>Sounds like <span style={{color: "var(--gold-bright)", fontWeight: 600}}>/{selected.sound}/</span></div>
             <p style={aStyles.detailHint}>{selected.hint}</p>
             <div style={aStyles.detailActions}>
-              <button className="btn btn-primary" onClick={() => speak(selected.sound)}>🔊 Hear it</button>
+              <button className="btn btn-primary" onClick={() => speakSound(selected.sound)}>🔊 Hear it</button>
               <button className="btn btn-ghost" onClick={() => setSelected(null)}>Close</button>
             </div>
           </div>
@@ -375,10 +380,7 @@ const aStyles = {
 
 function Lessons() {
   const [openId, setOpenId] = React.useState(null);
-  const [completed, setCompleted] = React.useState(() => { try { return JSON.parse(localStorage.getItem("medu-completed") || "[]"); } catch { return []; } });
-  const toggleDone = (id) => {
-    setCompleted(prev => { const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]; try { localStorage.setItem("medu-completed", JSON.stringify(next)); } catch {} return next; });
-  };
+  const [completed, toggleDone] = useCompletedLessons();
   const open = window.LESSONS.find(l => l.id === openId);
   useDialog(!!open, () => setOpenId(null));
   return (

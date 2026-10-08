@@ -150,6 +150,62 @@ window.translateToGlyphs = function(input) {
   return tokens;
 };
 
+// Common English words, used to pick the right letter when one sign stands for
+// several (𓅱 = O/U/W, 𓇋 = E/I, 𓎡 = C/K, 𓆑 = F/V/PH, 𓍿 = CH/TH, 𓈎 = Q/QU).
+window.COMMON_WORDS = new Set(`
+a about after again all also am an and any are as ask at away back bad be because bed been before being best big bird
+black blue boat book both box boy bring brother but buy by call came can cat chair child city close cold come cook could
+cool cow cut dad day did do does dog done door down draw drink each eat egg end even ever every eye face fall far fast
+father feet few find fine fire first fish five fly food foot for four friend from fun game gave get girl give go god
+going gold good got great green had hand happy has hat have he head hear help her here hi high him his home hope horse
+hot house how i if in into is it its jump just keep kick kid kind king know last laugh learn left let life like line lion
+little live long look lot love made make man many may me mom moon more most mother move much must my name need never
+new next nice night no not now of off oh old on once one only open or other our out over own page park people pick
+place play please pretty put queen quick quiet quite rain read red ride right river road rock room run said same sat
+saw say school sea see seven she ship shop show sing sister sit six sky sleep small snake so some song soon star stay
+still stop sun swim table take talk tell ten than thank thanks that the their them then there these they thing think
+this those three through time to today together too took tree try two under up us use very wait walk want warm was
+watch water way we well went were what when where which while white who why will wind window wish with woman word
+work world would write year yes yet you young your
+`.trim().split(/\s+/));
+
+// The letters each sign can stand for, most likely first.
+function glyphReadings(ch) {
+  const letters = window.ALPHABET.filter(a => a.glyph === ch).map(a => a.letter.toLowerCase());
+  const digraphs = window.DIGRAPHS.filter(d => d.glyph === ch).map(d => d.seq.toLowerCase());
+  const all = [...letters, ...digraphs];
+  if (all.includes("th")) all.sort((x, y) => (y === "th") - (x === "th")); // TH is commoner than CH
+  return all;
+}
+
+// Choose letters for one run of signs: a dictionary word if any reading makes one,
+// otherwise rules of thumb by position.
+function resolveRun(options) {
+  const combos = [];
+  const build = (i, acc) => {
+    if (combos.length >= 2048) return;
+    if (i === options.length) { combos.push(acc); return; }
+    for (const o of options[i]) build(i + 1, acc + o);
+  };
+  build(0, "");
+  const hit = combos.find(w => window.COMMON_WORDS.has(w)) ||
+              combos.find(w => w.endsWith("s") && window.COMMON_WORDS.has(w.slice(0, -1)));
+  if (hit) return hit;
+  const vowelSign = (opts) => opts && opts.some(o => "aei".includes(o) && o.length === 1);
+  let out = "";
+  options.forEach((opts, i) => {
+    if (opts.length === 1) { out += opts[0]; return; }
+    const first = i === 0, last = i === options.length - 1, next = options[i + 1];
+    let pick = opts[0];
+    if (opts.includes("w")) pick = first || vowelSign(next) || (last && /[aeiou]$/.test(out)) ? "w" : "o";
+    else if (opts.includes("i")) pick = options.length === 1 ? "i" : last ? "e" : "i";
+    else if (opts.includes("k")) pick = first ? "c" : "k";
+    else if (opts.includes("qu")) pick = next && next.includes("w") ? "q" : "qu";
+    out += pick;
+  });
+  return out;
+}
+
 // Longest-match scan. Multi-glyph words (EGYPT, PHARAOH) win over their
 // parts; single glyphs that are also letters (𓏏 T, 𓂋 R) read as letters.
 window.translateFromGlyphs = function(input) {
@@ -160,21 +216,23 @@ window.translateFromGlyphs = function(input) {
     .filter(w => w.glyphs.length > 1)
     .sort((a, b) => b.glyphs.length - a.glyphs.length);
   let out = "";
+  let run = [];
+  const flush = () => { if (run.length) out += resolveRun(run); run = []; };
   let i = 0;
   while (i < glyphs.length) {
     const ch = glyphs[i];
-    if (/\s/.test(ch)) { out += " "; i += 1; continue; }
+    if (/\s/.test(ch)) { flush(); out += " "; i += 1; continue; }
     const multi = words.find(w => w.glyphs.every((g, k) => glyphs[i + k] === g));
-    if (multi) { out += ` ${multi.text} `; i += multi.glyphs.length; continue; }
+    if (multi) { flush(); out += ` ${multi.text} `; i += multi.glyphs.length; continue; }
     i += 1;
-    const letter = window.ALPHABET.find(a => a.glyph === ch);
-    if (letter) { out += letter.letter.toLowerCase(); continue; }
-    const dig = window.DIGRAPHS.find(d => d.glyph === ch);
-    if (dig) { out += dig.seq.toLowerCase(); continue; }
+    const readings = glyphReadings(ch);
+    if (readings.length) { run.push(readings); continue; }
+    flush();
     const word = window.WORD_GLYPHS.find(w => w.glyph === ch);
     if (word) { out += ` ${word.word.toLowerCase()} `; continue; }
     out += /[\u{13000}-\u{1342F}]/u.test(ch) ? "?" : ch;
   }
+  flush();
   return out.replace(/\s+/g, " ").replace(/ ([,.!;:])/g, "$1").trim();
 };
 

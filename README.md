@@ -38,6 +38,10 @@ This app lets you translate English into hieroglyphs, learn the alphabet, build 
 
 A touch-first version with four tabs and bottom sheets. On a phone it fills the screen like a native app; on a bigger screen it's shown inside an iPhone mockup.
 
+### 📲 Install it
+
+Both pages can be installed like an app and work offline after your first visit. On iPhone: Share → **Add to Home Screen**. On Android or desktop Chrome/Edge: the **Install** option in the browser menu or address bar. Lesson progress is shared between the desktop and mobile pages.
+
 ---
 
 ## How It Works
@@ -92,6 +96,7 @@ No install needed just to use it — just open and learn.
 | `src/shared.jsx` | Helpers both apps use (dialogs, speech) |
 | `dist/` | Compiled app code the pages load — generated, don't edit |
 | `tests/` | Checks for the data and translator |
+| `sw.js`, `manifest*.webmanifest`, `icons/` | Offline support and install-as-app |
 
 ## Making Changes
 
@@ -101,7 +106,7 @@ npm run build      # after editing anything in src/ — then commit dist/ too
 npm test           # data + translator checks
 ```
 
-`data.js`, the HTML and CSS need no build. CI runs the tests and fails if `dist/` wasn't rebuilt after a `src/` change.
+`data.js`, the HTML and CSS need no build. If you add a new file that the pages load, add it to `OWN_FILES` in `sw.js` (a test checks this). CI runs the tests and fails if `dist/` wasn't rebuilt after a `src/` change.
 
 ---
 

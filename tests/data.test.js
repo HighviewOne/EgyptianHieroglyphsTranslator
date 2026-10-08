@@ -63,6 +63,14 @@ test("glyphs → English", () => {
   assert.equal(back(""), "");
 });
 
+test("signs with several letters decode to real words", () => {
+  const roundTrip = (s) => window.translateFromGlyphs(toGlyphs(s));
+  for (const s of ["you were wow", "i was here", "thanks for the fish", "the quick fox", "kick the ball", "now go"]) {
+    assert.equal(roundTrip(s), s);
+  }
+  assert.equal(window.translateFromGlyphs("𓅱"), "w", "a lone quail chick at a word start reads as W");
+});
+
 test("every flashcard has exactly one correct option", () => {
   for (const card of PRACTICE_DECK) {
     assert.ok(card.options.includes(card.answer), `${card.answer} missing from its own options`);
@@ -93,5 +101,20 @@ test("both pages load data.js and their compiled bundle", () => {
     assert.ok(src.includes(`<script src="${bundle}"></script>`), `${html} loads ${bundle}`);
     assert.ok(fs.existsSync(path.join(root, bundle)), `${bundle} exists — run npm run build`);
     assert.doesNotMatch(src, /text\/babel|babel\.min\.js/, `${html} no longer needs Babel in the browser`);
+  }
+});
+
+test("offline cache lists only files that exist, including every page script", () => {
+  const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
+  const own = JSON.parse(sw.match(/const OWN_FILES = (\[[\s\S]*?\]);/)[1].replace(/,\s*\]/, "]"));
+  for (const f of own) {
+    if (f === "./") continue;
+    assert.ok(fs.existsSync(path.join(root, decodeURIComponent(f))), `sw.js caches missing file ${f}`);
+  }
+  for (const html of ["index.html", "Medu Mobile.html"]) {
+    const src = fs.readFileSync(path.join(root, html), "utf8");
+    for (const [, s] of src.matchAll(/<script src="([^"]+)"/g)) {
+      assert.ok(own.includes(s) || sw.includes(s), `${html} loads ${s} but sw.js doesn't cache it`);
+    }
   }
 });

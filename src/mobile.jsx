@@ -1,4 +1,4 @@
-import { useDialog, speak, fitGlyphs } from "./shared.jsx";
+import { useDialog, speak, speakSound, speakToken, fitGlyphs, useCompletedLessons } from "./shared.jsx";
 
 // iOS Frame
 function IOSStatusBar({ dark = false, time = '9:41' }) {
@@ -89,6 +89,10 @@ function MobileTranslate() {
   const [tappedGlyph, setTappedGlyph] = React.useState(null);
   const daily = React.useMemo(() => window.getDailyGlyph(), []);
   const tokens = mode === "toGlyph" ? window.translateToGlyphs(input) : [];
+  const [copied, setCopied] = React.useState(false);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(tokens.map(t => t.glyph).join("")); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch {}
+  };
   const englishOut = mode === "toEnglish" ? window.translateFromGlyphs(input) : "";
 
   return (
@@ -169,7 +173,7 @@ function MobileTranslate() {
             {mode === "toGlyph" && tokens.length > 0 && (
               <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
                 <button onClick={() => speak(input)} style={{ flex: 1, padding: "12px", background: M_SURFACE_2, border: "1px solid var(--hairline)", borderRadius: 10, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-dim)" }}>🔊 Speak</button>
-                <button onClick={() => navigator.clipboard?.writeText(tokens.map(t => t.glyph).join(""))} style={{ flex: 1, padding: "12px", background: M_SURFACE_2, border: "1px solid var(--hairline)", borderRadius: 10, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-dim)" }}>Copy</button>
+                <button onClick={copy} aria-live="polite" style={{ flex: 1, padding: "12px", background: M_SURFACE_2, border: "1px solid var(--hairline)", borderRadius: 10, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-dim)" }}>{copied ? "✓ Copied" : "Copy"}</button>
               </div>
             )}
           </div>
@@ -183,7 +187,7 @@ function MobileTranslate() {
             <div style={{ fontFamily: "var(--font-display)", fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6 }}>{tappedGlyph.type === "word" ? "Sacred word" : "Phonetic sign"}</div>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 28, color: "var(--papyrus)", letterSpacing: "0.04em" }}>{tappedGlyph.name}</h2>
             <div style={{ color: "var(--text-dim)", fontSize: 15, marginTop: 6 }}>Sounds like <span style={{ color: "var(--gold-bright)", fontWeight: 600 }}>"{tappedGlyph.char}"</span></div>
-            <button onClick={() => speak(tappedGlyph.char)} style={{ marginTop: 24, padding: "14px 28px", background: "linear-gradient(180deg, var(--gold-bright), var(--gold))", color: "#1A140C", fontWeight: 700, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", borderRadius: 12, boxShadow: "0 8px 24px rgba(212,162,76,0.3)" }}>🔊 Hear it</button>
+            <button onClick={() => speakToken(tappedGlyph)} style={{ marginTop: 24, padding: "14px 28px", background: "linear-gradient(180deg, var(--gold-bright), var(--gold))", color: "#1A140C", fontWeight: 700, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", borderRadius: 12, boxShadow: "0 8px 24px rgba(212,162,76,0.3)" }}>🔊 Hear it</button>
           </div>
         )}
       </BottomSheet>
@@ -249,7 +253,7 @@ function MobileAlphabet() {
       <ScreenHeader eyebrow="Reference" title="The Alphabet" subtitle="All 26 English letters, each matched to the closest Egyptian sound sign — some letters share one. Tap any sign to hear it and learn the picture origin."/>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, padding: "0 16px" }}>
         {window.ALPHABET.map((a) => (
-          <button key={a.letter} onClick={() => { setSelected(a); speak(a.sound); }} aria-label={`${a.letter}: ${a.name}, sounds like ${a.sound}`}
+          <button key={a.letter} onClick={() => { setSelected(a); speakSound(a.sound); }} aria-label={`${a.letter}: ${a.name}, sounds like ${a.sound}`}
             style={{ padding: "12px 6px", background: M_SURFACE, border: "1px solid var(--hairline)", borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "all 0.15s" }}>
             <div style={{ fontFamily: "var(--font-display)", fontSize: 11, fontWeight: 700, color: "var(--gold)", letterSpacing: "0.1em" }}>{a.letter}</div>
             <div className="glyph" style={{ fontSize: 30, color: "var(--papyrus)" }}>{a.glyph}</div>
@@ -265,7 +269,7 @@ function MobileAlphabet() {
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 30, color: "var(--papyrus)", letterSpacing: "0.04em" }}>{selected.name}</h2>
             <div style={{ color: "var(--text-dim)", fontSize: 15, marginTop: 6 }}>Sounds like <span style={{ color: "var(--gold-bright)", fontWeight: 600 }}>/{selected.sound}/</span></div>
             <p style={{ color: "var(--text-dim)", fontSize: 14, lineHeight: 1.55, marginTop: 20, padding: "0 8px" }}>{selected.hint}</p>
-            <button onClick={() => speak(selected.sound)} style={{ marginTop: 24, padding: "14px 32px", background: "linear-gradient(180deg, var(--gold-bright), var(--gold))", color: "#1A140C", fontWeight: 700, fontSize: 13, letterSpacing: "0.14em", textTransform: "uppercase", borderRadius: 12, boxShadow: "0 8px 24px rgba(212,162,76,0.3)" }}>🔊 Hear it</button>
+            <button onClick={() => speakSound(selected.sound)} style={{ marginTop: 24, padding: "14px 32px", background: "linear-gradient(180deg, var(--gold-bright), var(--gold))", color: "#1A140C", fontWeight: 700, fontSize: 13, letterSpacing: "0.14em", textTransform: "uppercase", borderRadius: 12, boxShadow: "0 8px 24px rgba(212,162,76,0.3)" }}>🔊 Hear it</button>
           </div>
         )}
       </BottomSheet>
@@ -429,11 +433,7 @@ function MobileMatch() {
 function MobileDiscover() {
   const [openLesson, setOpenLesson] = React.useState(null);
   const [openPharaoh, setOpenPharaoh] = React.useState(null);
-  const [completed, setCompleted] = React.useState(() => { try { return JSON.parse(localStorage.getItem("medu-mobile-completed") || "[]"); } catch { return []; } });
-
-  const toggleDone = (id) => {
-    setCompleted(prev => { const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]; try { localStorage.setItem("medu-mobile-completed", JSON.stringify(next)); } catch {} return next; });
-  };
+  const [completed, toggleDone] = useCompletedLessons();
 
   return (
     <div style={{ padding: "0 0 90px" }}>
