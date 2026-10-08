@@ -87,6 +87,8 @@ open "Medu Mobile.html"  # mobile app
 
 No install needed just to use it — just open and learn.
 
+Offline mode and install-as-app only work when the pages are served over http(s), not opened as files. To try them locally, run `python3 -m http.server` in the folder and open http://localhost:8000/.
+
 ## Project Layout
 
 | Path | What it is |
