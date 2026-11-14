@@ -1,4 +1,4 @@
-![MEDU Banner](https://capsule-render.vercel.app/api?type=waving&color=0E0A05,251B0F,8C6A2A,D4A24C&height=200&section=header&text=𓂀%20MEDU&fontSize=80&fontColor=D4A24C&animation=fadeIn&fontAlignY=42&desc=Words%20of%20the%20Gods%20%E2%80%94%20Egyptian%20Hieroglyph%20Translator&descAlignY=68&descAlign=50&descSize=16)
+![MEDU Banner](https://capsule-render.vercel.app/api?type=waving&color=0E0A05,251B0F,8C6A2A,D4A24C&height=200&section=header&text=𓂀%20MEDU&fontSize=80&fontColor=D4A24C&animation=fadeIn&fontAlignY=42&desc=Words%20of%20the%20Gods%20%E2%80%94%20Spell%20English%20in%20Egyptian%20Hieroglyphs&descAlignY=68&descAlign=50&descSize=16)
 
 <div align="center">
 
@@ -17,7 +17,9 @@
 
 **MEDU** (𓅓𓂧𓅱) means *"words"* in Ancient Egyptian — the root of *Medu Netjer*, "words of the gods," the name Egyptians gave their hieroglyphic script.
 
-This app lets you translate English into hieroglyphs, learn the alphabet, build your name in a royal cartouche, study the pharaohs, and practice with flashcards — all with an authentic tomb-wall aesthetic.
+This app lets you spell English words in hieroglyphs, learn the alphabet, build your name in a royal cartouche, study the pharaohs, and practice with flashcards — all with an authentic tomb-wall aesthetic.
+
+> **Spelling, not translation.** MEDU writes English *sounds* with hieroglyph signs — the same trick Ptolemaic scribes used for foreign names like Cleopatra. It does not translate English into the ancient Egyptian language, which had its own words and grammar. A handful of common words (ankh, nefer, pharaoh…) use their real Egyptian spellings instead.
 
 ---
 
@@ -27,7 +29,7 @@ This app lets you translate English into hieroglyphs, learn the alphabet, build 
 
 | Tab | What you can do |
 |---|---|
-| 𓂀 **Translate** | Type English → see animated hieroglyphs. Tap any glyph for its name. Reverse-translate hieroglyphs → English. Speak aloud. Copy to clipboard. |
+| 𓂀 **Translate** | Type English → see animated hieroglyphs. Tap any glyph for its name. Read hieroglyphs back → English. Speak aloud. Copy to clipboard. |
 | 𓄿 **Alphabet** | 26-tile grid of the hieroglyphic alphabet. Tap to hear the sound and see full detail. |
 | 𓏣 **Cartouche** | Generate your name inside a royal oval, just like the pharaohs. Save as PNG or print. |
 | 𓏠 **Lessons** | 6 structured lessons from "What Are Hieroglyphs?" to determinatives. Progress saved automatically. |

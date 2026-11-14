@@ -2,7 +2,7 @@
   "name": "MEDU — Egyptian Hieroglyphs",
   "id": "./",
   "start_url": "./",
-  "description": "Translate English into hieroglyphs, write your name in a cartouche, and learn the ancient Egyptian signs.",
+  "description": "Spell English in hieroglyphs, write your name in a cartouche, and learn the ancient Egyptian signs.",
   "short_name": "MEDU",
   "scope": "./",
   "display": "standalone",

@@ -51,7 +51,10 @@ function Translator() {
   return (
     <div className="surface-stone fade-up" style={tStyles.wrap}>
       <div style={tStyles.header}>
-        <div className="h-eyebrow">Translator</div>
+        <div>
+          <div className="h-eyebrow">Spell it in hieroglyphs</div>
+          <p style={{color: "var(--text-mute)", fontSize: 13, lineHeight: 1.5, margin: "6px 0 0", maxWidth: 520}}>This spells English sounds with hieroglyph signs, the way foreign names like Cleopatra were written in cartouches. It doesn't translate into the ancient Egyptian language.</p>
+        </div>
         <div style={tStyles.directionToggle}>
           <button onClick={() => { setDirection("toGlyph"); setInput(""); }} style={{...tStyles.dirBtn, ...(direction === "toGlyph" ? tStyles.dirBtnActive : {})}}>English <span style={tStyles.arrow}>→</span> <span className="glyph">𓂀</span></button>
           <button onClick={() => { setDirection("toEnglish"); setInput(""); }} style={{...tStyles.dirBtn, ...(direction === "toEnglish" ? tStyles.dirBtnActive : {})}}><span className="glyph">𓂀</span> <span style={tStyles.arrow}>→</span> English</button>
@@ -354,7 +357,7 @@ function Alphabet() {
       )}
       <div style={aStyles.note}>
         <div className="h-eyebrow" style={{marginBottom: 8}}>A note for scholars</div>
-        <p style={{color: "var(--text-dim)", fontSize: 14, lineHeight: 1.6, maxWidth: 720}}>Real ancient Egyptian had no letters for vowels (E, O, U) — scribes wrote only consonants. Modern translators map English vowels to the closest matching glyphs (𓇋 for E/I, 𓅱 for O/U/W) so names and messages can be written phonetically. This is how Egyptologists transliterate names like "Cleopatra" into cartouches.</p>
+        <p style={{color: "var(--text-dim)", fontSize: 14, lineHeight: 1.6, maxWidth: 720}}>Egyptian writing had no signs for vowels (E, O, U) — scribes wrote only consonants. MEDU, like most name-in-hieroglyphs tools, maps English vowels to the closest weak consonants (𓇋 for E/I, 𓅱 for O/U/W) so names can be spelled out by sound. Scribes in the Ptolemaic and Roman periods did something similar when they wrote foreign names such as Cleopatra and Ptolemy. It is a spelling, not a translation into Egyptian.</p>
       </div>
     </div>
   );
@@ -774,7 +777,7 @@ const NAV = [
   { id: "translate", label: "Translate", glyph: "𓂀" },
   { id: "alphabet",  label: "Alphabet",  glyph: "𓄿" },
   { id: "cartouche", label: "Cartouche", glyph: "𓍷" },
-  { id: "lessons",   label: "Lessons",   glyph: "𓊪" },
+  { id: "lessons",   label: "Lessons",   glyph: "𓏞" },
   { id: "pharaohs",  label: "Pharaohs",  glyph: "𓋹" },
   { id: "practice",  label: "Practice",  glyph: "𓆣" },
 ];
@@ -824,7 +827,7 @@ function App() {
         <div style={footerStyles.footerInner}>
           <div style={footerStyles.footerCol}>
             <div className="h-eyebrow" style={{marginBottom: 6}}>MEDU NETJER</div>
-            <div style={{color: "var(--text-mute)", fontSize: 13, lineHeight: 1.55, maxWidth: 360}}>A learning playground for ancient Egyptian hieroglyphs. Translate, decode, study the pharaohs, and earn your scribe's title.</div>
+            <div style={{color: "var(--text-mute)", fontSize: 13, lineHeight: 1.55, maxWidth: 360}}>A learning playground for ancient Egyptian hieroglyphs. Spell words in glyphs, decode them, study the pharaohs, and earn your scribe's title.</div>
           </div>
           <div style={footerStyles.footerCol}>
             <div className="h-eyebrow" style={{marginBottom: 12}}>Did you know?</div>
