@@ -110,6 +110,7 @@ function MobileTranslate() {
       </div>
 
       <ScreenHeader title="Translate" eyebrow="MEDU NETJER"/>
+      <p style={{ padding: "0 16px", margin: "-6px 0 14px", fontSize: 12, lineHeight: 1.5, color: "var(--text-mute)" }}>This spells English sounds with hieroglyph signs, the way foreign names like Cleopatra were written in cartouches. It doesn't translate into the ancient Egyptian language.</p>
 
       {/* Segmented control */}
       <div style={{ padding: "0 16px 16px" }}>
@@ -138,7 +139,7 @@ function MobileTranslate() {
             </div>
 
             <div style={{ background: "linear-gradient(180deg, #2a1f10, #15100A)", border: "1px solid var(--hairline-strong)", borderRadius: 16, minHeight: 140, padding: 16, boxShadow: "inset 0 2px 12px rgba(0,0,0,0.4)" }}>
-              <div style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 10, fontFamily: "var(--font-display)" }}>{mode === "toGlyph" ? "In hieroglyphs" : "Translation"}</div>
+              <div style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 10, fontFamily: "var(--font-display)" }}>{mode === "toGlyph" ? "In hieroglyphs" : "Reads as"}</div>
               {mode === "toGlyph" ? (
                 tokens.length === 0
                   ? <div style={{ color: "var(--text-faint)", fontStyle: "italic", fontSize: 14, textAlign: "center", padding: "30px 0" }}>Your message will appear here.</div>
