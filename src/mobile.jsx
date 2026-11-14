@@ -184,9 +184,9 @@ function MobileTranslate() {
         {tappedGlyph && (
           <div style={{ textAlign: "center", padding: "12px 0 0" }}>
             <span className="glyph" style={{ fontSize: 140, color: "var(--gold-bright)", display: "block", marginBottom: 16, animation: "glow 3s ease-in-out infinite" }}>{tappedGlyph.glyph}</span>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6 }}>{tappedGlyph.type === "word" ? "Sacred word" : "Phonetic sign"}</div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6 }}>{tappedGlyph.type === "word" ? "Sacred word" : tappedGlyph.type === "num" ? "Number sign" : "Phonetic sign"}</div>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 28, color: "var(--papyrus)", letterSpacing: "0.04em" }}>{tappedGlyph.name}</h2>
-            <div style={{ color: "var(--text-dim)", fontSize: 15, marginTop: 6 }}>Sounds like <span style={{ color: "var(--gold-bright)", fontWeight: 600 }}>"{tappedGlyph.char}"</span></div>
+            <div style={{ color: "var(--text-dim)", fontSize: 15, marginTop: 6 }}>{tappedGlyph.type === "num" ? "Worth" : "Sounds like"} <span style={{ color: "var(--gold-bright)", fontWeight: 600 }}>{tappedGlyph.type === "num" ? tappedGlyph.char : `"${tappedGlyph.char}"`}</span></div>
             <button onClick={() => speakToken(tappedGlyph)} style={{ marginTop: 24, padding: "14px 28px", background: "linear-gradient(180deg, var(--gold-bright), var(--gold))", color: "#1A140C", fontWeight: 700, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", borderRadius: 12, boxShadow: "0 8px 24px rgba(212,162,76,0.3)" }}>🔊 Hear it</button>
           </div>
         )}

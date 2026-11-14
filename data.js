@@ -89,6 +89,7 @@ window.LESSONS = [
   { id: 4, title: "The cartouche", duration: "4 min", icon: "𓍷", summary: "The oval loop that protects a royal name.", content: [{ type: "p", text: "When scribes wrote a pharaoh's name, they drew an oval loop around it — called a cartouche. The loop was meant to magically protect the name from harm." }, { type: "p", text: "It was the discovery of cartouches on the Rosetta Stone that let scholars finally crack the hieroglyphic code in 1822." }, { type: "showcase", glyphs: ["𓍷"], caption: "An empty cartouche, ready for a royal name." }, { type: "tip", text: "Try the Cartouche maker to write your own name in a royal oval." }] },
   { id: 5, title: "Sacred symbols", duration: "4 min", icon: "𓋹", summary: "Ankh, Eye of Horus, scarab — what they meant.", content: [{ type: "p", text: "Some hieroglyphs weren't just letters — they were sacred symbols carried as amulets and painted on tombs for protection in the afterlife." }, { type: "glyphCard", glyph: "𓋹", title: "Ankh", text: "Life. The key of life, held by gods to grant immortality." }, { type: "glyphCard", glyph: "𓂀", title: "Eye of Horus", text: "Protection and healing. The eye Horus lost battling his uncle Set." }, { type: "glyphCard", glyph: "𓆣", title: "Scarab", text: "Rebirth. The beetle that rolls the sun across the sky each day." }, { type: "glyphCard", glyph: "𓊽", title: "Djed", text: "Stability. The spine of the god Osiris." }] },
   { id: 6, title: "Cracking the code", duration: "5 min", icon: "𓊪", summary: "How Champollion decoded hieroglyphs from a stone.", content: [{ type: "p", text: "The last known hieroglyphic inscription was carved at Philae in 394 CE. Soon after, no one on Earth could read them — the knowledge was lost for about 1,400 years." }, { type: "p", text: "In 1799, Napoleon's soldiers found a black stone near Rosetta, Egypt. It had the same text carved three times: in Greek, in Demotic, and in hieroglyphs." }, { type: "p", text: "A young Frenchman, Jean-François Champollion, spent 14 years comparing them. In 1822 he cracked it — starting with the cartouche containing the name 'PTOLEMY.'" }, { type: "showcase", glyphs: ["𓊪", "𓏏", "𓍯", "𓃭", "𓐝", "𓇌", "𓋴"], caption: "P-T-O-L-M-Y-S — the cartouche that started it all." }] },
+  { id: 7, title: "Counting like a scribe", duration: "3 min", icon: "𓆼", summary: "Strokes, coils and lotus plants — Egyptian numbers.", content: [{ type: "p", text: "Egyptians counted in tens, as we do, but they had no zero and no place value. Each power of ten had its own sign, written as many times as needed." }, { type: "showcase", glyphs: ["𓏺", "𓎆", "𓍢", "𓆼", "𓂭", "𓆐", "𓁨"], caption: "1, 10, 100, 1,000, 10,000, 100,000 and 1,000,000." }, { type: "p", text: "The signs are pictures: a stroke, a cattle hobble, a coil of rope, a lotus plant, a finger, a tadpole, and Heh, a kneeling god with raised arms whose sign also meant 'millions' or 'eternity.'" }, { type: "p", text: "To read a number, add up the signs. Order doesn't change the value, but scribes wrote the biggest signs first." }, { type: "showcase", glyphs: ["𓆼", "𓆼", "𓎆", "𓎆", "𓏺", "𓏺", "𓏺", "𓏺", "𓏺", "𓏺"], caption: "2,026 = two lotus plants, two hobbles and six strokes." }, { type: "tip", text: "Type any number in the Translator to see it written the Egyptian way." }] },
 ];
 
 window.PRACTICE_DECK = [
@@ -124,6 +125,35 @@ window.DAILY_GLYPHS = [
   { glyph: "𓇼", name: "Seba",    meaning: "Star",           fact: "Egyptians believed the stars were the souls of pharaohs sailing through the night sky." },
 ];
 
+// Egyptian numerals: one sign per power of ten, repeated as often as needed (no zero,
+// no place value). Written largest first, so 2026 = 𓆼𓆼 𓎆𓎆 𓏺𓏺𓏺𓏺𓏺𓏺.
+window.NUMERALS = [
+  { value: 1000000, glyph: "𓁨", name: "Heh, god of millions" },
+  { value: 100000,  glyph: "𓆐", name: "Tadpole" },
+  { value: 10000,   glyph: "𓂭", name: "Finger" },
+  { value: 1000,    glyph: "𓆼", name: "Lotus plant" },
+  { value: 100,     glyph: "𓍢", name: "Coil of rope" },
+  { value: 10,      glyph: "𓎆", name: "Cattle hobble" },
+  { value: 1,       glyph: "𓏺", name: "Stroke" },
+];
+const NUMERAL_MAX = 9999999;
+
+// Tokens for a run of digits. Zero and numbers past 9,999,999 had no Egyptian
+// numeral, so they stay as plain digits.
+function numberTokens(digits) {
+  const n = Number(digits);
+  if (n === 0) return [{ char: digits, glyph: digits, name: "Zero (Egyptian numerals had no zero sign)", type: "num" }];
+  if (n > NUMERAL_MAX) return [{ char: digits, glyph: digits, name: "Too big for Egyptian numerals", type: "num" }];
+  const tokens = [];
+  let rest = n;
+  for (const sign of window.NUMERALS) {
+    const count = Math.floor(rest / sign.value);
+    rest -= count * sign.value;
+    for (let k = 0; k < count; k++) tokens.push({ char: sign.value.toLocaleString("en-US"), glyph: sign.glyph, name: sign.name, type: "num", value: sign.value });
+  }
+  return tokens;
+}
+
 // Words where English CH is a hard K. CH before a consonant (Chris, Chloe, technology)
 // and SCH (school) are caught by rule in translateToGlyphs.
 window.CH_AS_K = new Set(`
@@ -135,7 +165,9 @@ const chIsK = (word, i) => /[^AEIOUY]/.test(word[i + 2] || "A") || word[i - 1] =
 
 window.translateToGlyphs = function(input) {
   // José → JOSE: drop accents so every Latin letter gets a sign.
-  const text = (input || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  // 1,000,000 → 1000000 so thousands separators don't split a number.
+  const text = (input || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()
+    .replace(/(\d),(?=\d{3}(?!\d))/g, "$1");
   const tokens = [];
   const words = text.split(/(\s+|[^A-Z0-9])/);
   for (const word of words) {
@@ -156,7 +188,7 @@ window.translateToGlyphs = function(input) {
       const ch = word[i];
       const letter = window.ALPHABET.find(a => a.letter === ch);
       if (letter) { tokens.push({ char: ch.toLowerCase(), glyph: letter.glyph, name: letter.name, type: "letter" }); }
-      else if (/\d/.test(ch)) { tokens.push({ char: ch, glyph: ch, name: "number", type: "num" }); }
+      else if (/\d/.test(ch)) { const digits = word.slice(i).match(/^\d+/)[0]; tokens.push(...numberTokens(digits)); i += digits.length; continue; }
       else { tokens.push({ char: ch, glyph: "·", name: "unknown", type: "unknown" }); }
       i += 1;
     }
@@ -229,18 +261,22 @@ window.translateFromGlyphs = function(input) {
     .map(w => ({ glyphs: Array.from(w.glyph), text: w.word.toLowerCase() }))
     .filter(w => w.glyphs.length > 1)
     .sort((a, b) => b.glyphs.length - a.glyphs.length);
+  const numeralValue = Object.fromEntries(window.NUMERALS.map(n => [n.glyph, n.value]));
   let out = "";
   let run = [];
-  const flush = () => { if (run.length) out += resolveRun(run); run = []; };
+  let total = 0;
+  const flushNumber = () => { if (total) out += String(total); total = 0; };
+  const flush = () => { flushNumber(); if (run.length) out += resolveRun(run); run = []; };
   let i = 0;
   while (i < glyphs.length) {
     const ch = glyphs[i];
     if (/\s/.test(ch)) { flush(); out += " "; i += 1; continue; }
+    if (numeralValue[ch]) { if (run.length) flush(); total += numeralValue[ch]; i += 1; continue; }
     const multi = words.find(w => w.glyphs.every((g, k) => glyphs[i + k] === g));
     if (multi) { flush(); out += `\0${multi.text}\0`; i += multi.glyphs.length; continue; }
     i += 1;
     const readings = glyphReadings(ch);
-    if (readings.length) { run.push(readings); continue; }
+    if (readings.length) { flushNumber(); run.push(readings); continue; }
     flush();
     const word = window.WORD_GLYPHS.find(w => w.glyph === ch);
     if (word) { out += `\0${word.word.toLowerCase()}\0`; continue; }

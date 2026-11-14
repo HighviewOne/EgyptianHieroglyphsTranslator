@@ -98,7 +98,7 @@ function Translator() {
                 <div style={tStyles.glyphHint}>
                   <span className="glyph" style={{fontSize: 24, color: "var(--gold-bright)"}}>{shown[hovered].glyph}</span>
                   <span style={{fontWeight: 600, color: "var(--papyrus)"}}>{shown[hovered].name}</span>
-                  <span style={{color: "var(--text-mute)"}}>· {shown[hovered].type === "word" ? "sacred word" : "phonetic"}</span>
+                  <span style={{color: "var(--text-mute)"}}>· {shown[hovered].type === "word" ? "sacred word" : shown[hovered].type === "num" ? (shown[hovered].value ? `number · ${shown[hovered].char}` : "number") : "phonetic"}</span>
                 </div>
               )}
             </div>

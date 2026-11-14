@@ -53,7 +53,7 @@ test("English → glyphs", () => {
   assert.equal(toGlyphs("I was here"), "𓇋 𓅱𓄿𓋴 𓉔𓇋𓂋𓇋", "everyday 'was' is spelled out, not the sceptre");
   assert.equal(toGlyphs("José"), toGlyphs("Jose"), "accents are dropped, not passed through");
   assert.equal(toGlyphs("Zoë"), "𓊃𓅱𓇋");
-  assert.equal(toGlyphs("Mike_1"), "𓅓𓇋𓎡𓇋_1", "underscore is punctuation, not an unknown sign");
+  assert.equal(toGlyphs("Mike_1"), "𓅓𓇋𓎡𓇋_𓏺", "underscore is punctuation, not an unknown sign");
 });
 
 test("CH reads as K where English says it hard", () => {
@@ -141,4 +141,19 @@ test("offline cache lists only files that exist, including every page script", (
 
 test("pharaoh dates all say whether they are a reign or a queenship", () => {
   for (const p of PHARAOHS) assert.match(p.dates, /^(Reigned|Queen) /, p.name);
+});
+
+test("numbers become Egyptian numerals and decode back", () => {
+  assert.equal(toGlyphs("2026"), "𓆼𓆼𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺", "largest signs first, each repeated");
+  assert.equal(toGlyphs("1,000,000"), "𓁨", "thousands separators don't split the number");
+  assert.equal(toGlyphs("1,2,3"), "𓏺,𓏺𓏺,𓏺𓏺𓏺", "a plain list keeps its commas");
+  assert.equal(toGlyphs("0"), "0", "no zero sign, so zero stays a digit");
+  assert.equal(toGlyphs("12345678"), "12345678", "past 9,999,999 stays digits");
+  const back = (s) => window.translateFromGlyphs(toGlyphs(s));
+  for (const s of ["2026", "year 1922", "mike1", "ankh 3", "9999999", "7 cats"]) assert.equal(back(s), s);
+  assert.equal(window.translateFromGlyphs("𓏺𓏺𓎆"), "12", "order doesn't change the value");
+  const tok = window.translateToGlyphs("100")[0];
+  assert.equal(tok.type, "num");
+  assert.equal(tok.char, "100");
+  for (const n of window.NUMERALS) assert.ok(isHieroglyph(n.glyph), n.name);
 });
