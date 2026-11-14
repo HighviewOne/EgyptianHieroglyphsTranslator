@@ -437,6 +437,12 @@ function Lessons() {
                     <div><div style={lStyles.glyphCardTitle}>{block.title}</div><div style={lStyles.glyphCardText}>{block.text}</div></div>
                   </div>
                 );
+                if (block.type === "link") return (
+                  <a key={idx} href={block.href} target="_blank" rel="noopener" style={{...lStyles.glyphCard, textDecoration: "none", color: "inherit"}}>
+                    <span className="glyph" aria-hidden="true" style={lStyles.glyphCardGlyph}>{block.glyph}</span>
+                    <div><div style={lStyles.glyphCardTitle}>{block.title} <span style={{color: "var(--gold)"}} aria-hidden="true">↗</span></div><div style={lStyles.glyphCardText}>{block.text}</div></div>
+                  </a>
+                );
                 return null;
               })}
             </div>

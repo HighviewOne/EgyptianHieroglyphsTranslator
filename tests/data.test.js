@@ -110,8 +110,16 @@ test("memory-match boards never repeat a sign", () => {
 
 test("lessons are numbered 1..n and every block type is one the apps render", () => {
   assert.equal(LESSONS.map(l => l.id).join(), LESSONS.map((_, i) => i + 1).join());
-  const known = new Set(["p", "tip", "showcase", "glyphCard"]);
+  const known = new Set(["p", "tip", "showcase", "glyphCard", "link"]);
   for (const l of LESSONS) for (const b of l.content) assert.ok(known.has(b.type), `lesson ${l.id}: unknown block ${b.type}`);
+  const links = LESSONS.flatMap(l => l.content).filter(b => b.type === "link");
+  assert.ok(links.some(b => b.href.startsWith("https://highviewone.github.io/EgyptianMath/")), "the numerals lesson links to Temple of Numbers");
+  for (const b of links) {
+    assert.match(b.href, /^https:\/\//);
+    assert.ok(b.title && b.text && isHieroglyph(b.glyph));
+  }
+  const src = (f) => fs.readFileSync(path.join(root, "src", f), "utf8");
+  for (const f of ["desktop.jsx", "mobile.jsx"]) assert.ok(/type === "link"/.test(src(f)), `${f} renders link blocks`);
 });
 
 test("both pages load data.js and their compiled bundle", () => {
@@ -152,6 +160,7 @@ test("numbers become Egyptian numerals and decode back", () => {
   const back = (s) => window.translateFromGlyphs(toGlyphs(s));
   for (const s of ["2026", "year 1922", "mike1", "ankh 3", "9999999", "7 cats"]) assert.equal(back(s), s);
   assert.equal(window.translateFromGlyphs("𓏺𓏺𓎆"), "12", "order doesn't change the value");
+  assert.equal(window.translateFromGlyphs("𓆼𓆼𓍢𓎆𓎆𓎆𓏤𓏤𓏤𓏤𓏤"), "2135", "Temple of Numbers' 𓏤 stroke counts as 1");
   const tok = window.translateToGlyphs("100")[0];
   assert.equal(tok.type, "num");
   assert.equal(tok.char, "100");
