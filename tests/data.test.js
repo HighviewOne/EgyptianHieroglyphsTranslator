@@ -51,6 +51,22 @@ test("English → glyphs", () => {
   assert.equal(toGlyphs("cat"), "𓎡𓄿𓏏");
   assert.equal(toGlyphs("ship"), "𓈙𓇋𓊪", "SH digraph");
   assert.equal(toGlyphs("I was here"), "𓇋 𓅱𓄿𓋴 𓉔𓇋𓂋𓇋", "everyday 'was' is spelled out, not the sceptre");
+  assert.equal(toGlyphs("José"), toGlyphs("Jose"), "accents are dropped, not passed through");
+  assert.equal(toGlyphs("Zoë"), "𓊃𓅱𓇋");
+  assert.equal(toGlyphs("Mike_1"), "𓅓𓇋𓎡𓇋_1", "underscore is punctuation, not an unknown sign");
+});
+
+test("CH reads as K where English says it hard", () => {
+  const K = "𓎡", TJ = "𓍿";
+  for (const w of ["Chris", "Chloe", "Christina", "Michael", "school", "Rachel", "echo", "chemistry", "stomachs"]) {
+    const signs = Array.from(toGlyphs(w));
+    assert.ok(signs.includes(K) && !signs.includes(TJ), `${w} uses the basket (K), not the rope`);
+  }
+  for (const w of ["church", "Charles", "chair", "much"]) {
+    assert.ok(Array.from(toGlyphs(w)).includes(TJ), `${w} keeps the CH rope`);
+  }
+  const tok = window.translateToGlyphs("Chris")[0];
+  assert.equal(tok.letter, "K", "the token says which letter to speak");
 });
 
 test("glyphs → English", () => {
@@ -61,6 +77,10 @@ test("glyphs → English", () => {
   assert.equal(back(toGlyphs("egypt")), "egypt");
   assert.equal(back(toGlyphs("queen")), "queen");
   assert.equal(back(""), "");
+  assert.equal(back(toGlyphs("ankh-ra")), "ankh-ra", "no stray spaces around hyphens");
+  assert.equal(back(toGlyphs("pharaoh-king")), "pharaoh-king");
+  assert.equal(back(toGlyphs("ankh ra")), "ankh ra");
+  assert.equal(back(toGlyphs("sun, star!")), "ra, star!");
 });
 
 test("signs with several letters decode to real words", () => {
@@ -117,4 +137,8 @@ test("offline cache lists only files that exist, including every page script", (
       assert.ok(own.includes(s) || sw.includes(s), `${html} loads ${s} but sw.js doesn't cache it`);
     }
   }
+});
+
+test("pharaoh dates all say whether they are a reign or a queenship", () => {
+  for (const p of PHARAOHS) assert.match(p.dates, /^(Reigned|Queen) /, p.name);
 });

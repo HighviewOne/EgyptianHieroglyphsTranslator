@@ -72,14 +72,14 @@ window.WORD_GLYPHS = [
 ];
 
 window.PHARAOHS = [
-  { name: "Tutankhamun", glyph: "𓇋𓏠𓈖𓏏𓅱𓏏𓋹", dates: "c. 1341 – 1323 BCE", dynasty: "18th Dynasty", title: "The Boy King", fact: "Became pharaoh at age 9. His tomb (KV62) was found nearly untouched in 1922 by Howard Carter — packed with over 5,000 objects including a solid gold coffin and the famous death mask.", color: "#D4A24C" },
-  { name: "Cleopatra VII", glyph: "𓈎𓃭𓇋𓍯𓊪𓄿𓂧𓂋𓄿", dates: "69 – 30 BCE", dynasty: "Ptolemaic Dynasty", title: "The Last Pharaoh", fact: "Spoke at least 9 languages and was the first Ptolemaic ruler to learn Egyptian. Allied with Julius Caesar and Mark Antony before Egypt fell to Rome.", color: "#B8552E" },
-  { name: "Ramses II", glyph: "𓇳𓄟𓋴𓋴", dates: "c. 1303 – 1213 BCE", dynasty: "19th Dynasty", title: "Ramses the Great", fact: "Reigned 66 years, fathered around 100 children, and built more temples than any other pharaoh — including Abu Simbel, carved into a cliff face.", color: "#8B3A3A" },
-  { name: "Hatshepsut", glyph: "𓄂𓏏𓈙𓊪𓋴𓏏", dates: "c. 1507 – 1458 BCE", dynasty: "18th Dynasty", title: "Foremost of Noble Ladies", fact: "One of ancient Egypt's few female pharaohs. Wore the false beard of kingship and sent trade expeditions to the mysterious Land of Punt.", color: "#2E5C8A" },
-  { name: "Khufu", glyph: "𓐍𓅱𓆑𓅱", dates: "c. 2589 – 2566 BCE", dynasty: "4th Dynasty", title: "Builder of the Great Pyramid", fact: "Commissioned the Great Pyramid of Giza — 2.3 million stone blocks, originally 481 ft tall, the tallest structure on Earth for 3,800 years.", color: "#D4A24C" },
-  { name: "Akhenaten", glyph: "𓇋𓏏𓈖𓇳𓅜𓈖", dates: "c. 1380 – 1334 BCE", dynasty: "18th Dynasty", title: "The Heretic King", fact: "Abandoned Egypt's old gods to worship only the Aten (sun disc). Built a brand-new capital city, Amarna, and was married to the famous Nefertiti.", color: "#E8C36E" },
-  { name: "Nefertiti", glyph: "𓄤𓆑𓂋𓏏𓇋𓇋𓏏𓇋", dates: "c. 1370 – 1330 BCE", dynasty: "18th Dynasty", title: "The Beautiful One Has Come", fact: "Queen alongside Akhenaten, possibly co-ruler. Her painted limestone bust, found in 1912, is one of the most copied works of ancient art.", color: "#B8552E" },
-  { name: "Thutmose III", glyph: "𓅝𓄟𓋴", dates: "c. 1481 – 1425 BCE", dynasty: "18th Dynasty", title: "The Napoleon of Egypt", fact: "Led 17 military campaigns and expanded Egypt to its largest size ever. Never lost a battle in over 50 years of campaigning.", color: "#2E5C8A" },
+  { name: "Tutankhamun", glyph: "𓇋𓏠𓈖𓏏𓅱𓏏𓋹", dates: "Reigned c. 1332 – 1323 BCE", dynasty: "18th Dynasty", title: "The Boy King", fact: "Became pharaoh at age 9. His tomb (KV62) was found nearly untouched in 1922 by Howard Carter — packed with over 5,000 objects including a solid gold coffin and the famous death mask.", color: "#D4A24C" },
+  { name: "Cleopatra VII", glyph: "𓈎𓃭𓇋𓍯𓊪𓄿𓂧𓂋𓄿", dates: "Reigned 51 – 30 BCE", dynasty: "Ptolemaic Dynasty", title: "The Last Pharaoh", fact: "Spoke at least 9 languages and was the first Ptolemaic ruler to learn Egyptian. Allied with Julius Caesar and Mark Antony before Egypt fell to Rome.", color: "#B8552E" },
+  { name: "Ramses II", glyph: "𓇳𓄟𓋴𓋴", dates: "Reigned c. 1279 – 1213 BCE", dynasty: "19th Dynasty", title: "Ramses the Great", fact: "Reigned 66 years, fathered around 100 children, and built more temples than any other pharaoh — including Abu Simbel, carved into a cliff face.", color: "#8B3A3A" },
+  { name: "Hatshepsut", glyph: "𓄂𓏏𓈙𓊪𓋴𓏏", dates: "Reigned c. 1479 – 1458 BCE", dynasty: "18th Dynasty", title: "Foremost of Noble Ladies", fact: "One of ancient Egypt's few female pharaohs. Wore the false beard of kingship and sent trade expeditions to the mysterious Land of Punt.", color: "#2E5C8A" },
+  { name: "Khufu", glyph: "𓐍𓅱𓆑𓅱", dates: "Reigned c. 2589 – 2566 BCE", dynasty: "4th Dynasty", title: "Builder of the Great Pyramid", fact: "Commissioned the Great Pyramid of Giza — 2.3 million stone blocks, originally 481 ft tall, the tallest structure on Earth for 3,800 years.", color: "#D4A24C" },
+  { name: "Akhenaten", glyph: "𓇋𓏏𓈖𓇳𓅜𓈖", dates: "Reigned c. 1353 – 1336 BCE", dynasty: "18th Dynasty", title: "The Heretic King", fact: "Abandoned Egypt's old gods to worship only the Aten (sun disc). Built a brand-new capital city, Amarna, and was married to the famous Nefertiti.", color: "#E8C36E" },
+  { name: "Nefertiti", glyph: "𓄤𓆑𓂋𓏏𓇋𓇋𓏏𓇋", dates: "Queen c. 1353 – 1336 BCE", dynasty: "18th Dynasty", title: "The Beautiful One Has Come", fact: "Queen alongside Akhenaten, possibly co-ruler. Her painted limestone bust, found in 1912, is one of the most copied works of ancient art.", color: "#B8552E" },
+  { name: "Thutmose III", glyph: "𓅝𓄟𓋴", dates: "Reigned c. 1479 – 1425 BCE", dynasty: "18th Dynasty", title: "The Napoleon of Egypt", fact: "Led 17 military campaigns over about 20 years and pushed Egypt's empire to its greatest extent. No defeat of his is recorded.", color: "#2E5C8A" },
 ];
 
 window.LESSONS = [
@@ -111,7 +111,7 @@ window.PRACTICE_DECK = [
 
 window.DAILY_GLYPHS = [
   { glyph: "𓋹", name: "Ankh",    meaning: "Life",           fact: "Carried by gods as a key — said to unlock the door to the afterlife." },
-  { glyph: "𓂀", name: "Wedjat",  meaning: "Eye of Horus",   fact: "Each part of the eye stood for a fraction — 1/2, 1/4, 1/8, all the way to 1/64." },
+  { glyph: "𓂀", name: "Wedjat",  meaning: "Eye of Horus",   fact: "A popular tradition links each part of the eye to a fraction, from 1/2 down to 1/64, though historians now doubt the connection." },
   { glyph: "𓆣", name: "Kheper",  meaning: "Scarab beetle",  fact: "Egyptians saw beetles rolling dung balls and imagined the sun being rolled across the sky." },
   { glyph: "𓊽", name: "Djed",    meaning: "Stability",      fact: "Represented the backbone of the god Osiris — symbol of standing firm." },
   { glyph: "𓇳", name: "Ra",      meaning: "The sun",        fact: "The sun god sailed across the sky in a golden boat by day and fought the serpent Apophis by night." },
@@ -124,19 +124,33 @@ window.DAILY_GLYPHS = [
   { glyph: "𓇼", name: "Seba",    meaning: "Star",           fact: "Egyptians believed the stars were the souls of pharaohs sailing through the night sky." },
 ];
 
+// Words where English CH is a hard K. CH before a consonant (Chris, Chloe, technology)
+// and SCH (school) are caught by rule in translateToGlyphs.
+window.CH_AS_K = new Set(`
+ache anchor archaeology architect archive character chaos chasm chemical chemist chemistry chord chorus
+christ echo mechanic michael monarch orchestra orchid psyche psychology rachel stomach zachary
+`.trim().split(/\s+/).map(w => w.toUpperCase()));
+const chIsK = (word, i) => /[^AEIOUY]/.test(word[i + 2] || "A") || word[i - 1] === "S" ||
+  window.CH_AS_K.has(word) || window.CH_AS_K.has(word.replace(/(ES|S|ED|ING)$/, ""));
+
 window.translateToGlyphs = function(input) {
-  const text = (input || "").toUpperCase();
+  // José → JOSE: drop accents so every Latin letter gets a sign.
+  const text = (input || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
   const tokens = [];
-  const words = text.split(/(\s+|[^\w])/);
+  const words = text.split(/(\s+|[^A-Z0-9])/);
   for (const word of words) {
     if (!word) continue;
     if (/^\s+$/.test(word)) { tokens.push({ char: " ", glyph: " ", name: "space", type: "space" }); continue; }
-    if (/^[^\w]$/.test(word)) { tokens.push({ char: word, glyph: word, name: "punctuation", type: "punct" }); continue; }
+    if (/^[^A-Z0-9]$/.test(word)) { tokens.push({ char: word, glyph: word, name: "punctuation", type: "punct" }); continue; }
     const wordMatch = window.WORD_GLYPHS.find(w => w.word === word);
     if (wordMatch) { tokens.push({ char: word.toLowerCase(), glyph: wordMatch.glyph, name: wordMatch.meaning, type: "word" }); continue; }
     let i = 0;
     while (i < word.length) {
       const two = word.slice(i, i + 2);
+      if (two === "CH" && chIsK(word, i)) {
+        const k = window.ALPHABET.find(a => a.letter === "K");
+        tokens.push({ char: "ch", glyph: k.glyph, name: k.name, type: "letter", letter: "K" }); i += 2; continue;
+      }
       const dig = window.DIGRAPHS.find(d => d.seq === two);
       if (dig) { tokens.push({ char: two.toLowerCase(), glyph: dig.glyph, name: dig.name, type: "digraph" }); i += 2; continue; }
       const ch = word[i];
@@ -223,17 +237,21 @@ window.translateFromGlyphs = function(input) {
     const ch = glyphs[i];
     if (/\s/.test(ch)) { flush(); out += " "; i += 1; continue; }
     const multi = words.find(w => w.glyphs.every((g, k) => glyphs[i + k] === g));
-    if (multi) { flush(); out += ` ${multi.text} `; i += multi.glyphs.length; continue; }
+    if (multi) { flush(); out += `\0${multi.text}\0`; i += multi.glyphs.length; continue; }
     i += 1;
     const readings = glyphReadings(ch);
     if (readings.length) { run.push(readings); continue; }
     flush();
     const word = window.WORD_GLYPHS.find(w => w.glyph === ch);
-    if (word) { out += ` ${word.word.toLowerCase()} `; continue; }
+    if (word) { out += `\0${word.word.toLowerCase()}\0`; continue; }
     out += /[\u{13000}-\u{1342F}]/u.test(ch) ? "?" : ch;
   }
   flush();
-  return out.replace(/\s+/g, " ").replace(/ ([,.!;:])/g, "$1").trim();
+  // A marker becomes a space only between two words, never next to a space or punctuation.
+  return out.replace(/\0+/g, "\0")
+    .replace(/(^|[\s\p{P}])\0|\0(?=[\s\p{P}]|$)/gu, "$1")
+    .replace(/\0/g, " ")
+    .replace(/\s+/g, " ").replace(/ ([,.!;:])/g, "$1").trim();
 };
 
 // Memory-match board: `pairs` letters with distinct glyphs (C/K, E/I, F/V and

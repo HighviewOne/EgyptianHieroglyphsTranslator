@@ -599,7 +599,7 @@ function App() {
           <div aria-hidden="true" style={{ width: 32, height: 32, borderRadius: 7, background: "linear-gradient(135deg, #E8C36E, #8C6A2A)", display: "grid", placeItems: "center", fontFamily: "var(--font-glyph)", fontSize: 20, color: "#0E0A05", boxShadow: "0 0 0 1px #8C6A2A, 0 4px 14px rgba(212,162,76,0.35)" }}>𓂀</div>
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 18, letterSpacing: "0.32em", color: "var(--papyrus)" }}>MEDU</div>
-            <div style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--text-mute)", marginTop: 2 }}>iOS · Words of the gods</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--text-mute)", marginTop: 2 }}>Mobile · Words of the gods</div>
           </div>
         </div>
       </div>

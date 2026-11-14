@@ -56,7 +56,7 @@ export function speakSound(sound) {
 
 // Speak a translator token: a letter or digraph by its sound, a sacred word as the word.
 export function speakToken(tok) {
-  const sign = tok.type === "letter" ? window.ALPHABET.find(a => a.letter === tok.char.toUpperCase())
+  const sign = tok.type === "letter" ? window.ALPHABET.find(a => a.letter === (tok.letter || tok.char.toUpperCase()))
     : tok.type === "digraph" ? window.DIGRAPHS.find(d => d.seq === tok.char.toUpperCase()) : null;
   if (sign) speakSound(sign.sound); else speak(tok.char);
 }
