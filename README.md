@@ -19,7 +19,7 @@
 
 This app lets you spell English words in hieroglyphs, learn the alphabet, build your name in a royal cartouche, study the pharaohs, and practice with flashcards — all styled like a tomb wall.
 
-> **Spelling, not translation.** MEDU writes English *sounds* with hieroglyph signs — the same trick Ptolemaic scribes used for foreign names like Cleopatra. It does not translate English into the ancient Egyptian language, which had its own words and grammar. A handful of common words (ankh, nefer, pharaoh…) use their real Egyptian spellings instead.
+> **Spelling, not translation.** MEDU writes English *sounds* with hieroglyph signs — the same trick Ptolemaic scribes used for foreign names like Cleopatra. It does not translate English into the ancient Egyptian language, which had its own words and grammar. A handful of common words (ankh, nefer, pharaoh…) use their Egyptian word-signs or symbols instead — EYE, for example, gives the Eye of Horus 𓂀.
 
 ---
 
@@ -29,7 +29,7 @@ This app lets you spell English words in hieroglyphs, learn the alphabet, build 
 
 | Tab | What you can do |
 |---|---|
-| 𓂀 **Translate** | Type English → see it spelled in animated hieroglyphs. Tap any glyph for its name. Read hieroglyphs back → English. Speak aloud. Copy to clipboard. |
+| 𓂀 **Spell** | Type English → see it spelled in animated hieroglyphs. Tap any glyph for its name. Read hieroglyphs back → English. Speak aloud. Copy to clipboard. |
 | 𓄿 **Alphabet** | 26 tiles, one per English letter, showing the sign MEDU uses for it. Tap to hear the sound and see full detail. |
 | 𓏣 **Cartouche** | Generate your name inside a royal oval, just like the pharaohs. Save as PNG or print. |
 | 𓏠 **Lessons** | 6 structured lessons from "What Are Hieroglyphs?" to determinatives. Progress saved automatically. |
