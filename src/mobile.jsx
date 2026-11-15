@@ -109,7 +109,7 @@ function MobileTranslate() {
         </div>
       </div>
 
-      <ScreenHeader title="Translate" eyebrow="MEDU NETJER"/>
+      <ScreenHeader title="Spell" eyebrow="MEDU NETJER"/>
       <p style={{ padding: "0 16px", margin: "-6px 0 14px", fontSize: 12, lineHeight: 1.5, color: "var(--text-mute)" }}>This spells English sounds with hieroglyph signs, the way foreign names like Cleopatra were written in cartouches. It doesn't translate into the ancient Egyptian language.</p>
 
       {/* Segmented control */}
@@ -527,7 +527,7 @@ Object.assign(window, { MobileTranslate, MobileAlphabet, MobilePractice, MobileD
 const { useState, useEffect } = React;
 
 const TABS = [
-  { id: "translate", label: "Translate", glyph: "𓂀" },
+  { id: "translate", label: "Spell", glyph: "𓂀" },
   { id: "alphabet",  label: "Alphabet",  glyph: "𓄿" },
   { id: "practice",  label: "Practice",  glyph: "𓆣" },
   { id: "discover",  label: "Discover",  glyph: "𓋹" },

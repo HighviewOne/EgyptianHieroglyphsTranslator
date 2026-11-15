@@ -774,7 +774,7 @@ Object.assign(window, { Practice });
 const { useState, useEffect } = React;
 
 const NAV = [
-  { id: "translate", label: "Translate", glyph: "𓂀" },
+  { id: "translate", label: "Spell", glyph: "𓂀" },
   { id: "alphabet",  label: "Alphabet",  glyph: "𓄿" },
   { id: "cartouche", label: "Cartouche", glyph: "𓍷" },
   { id: "lessons",   label: "Lessons",   glyph: "𓏞" },

@@ -17,9 +17,9 @@
 
 **MEDU** (𓅓𓂧𓅱) means *"words"* in Ancient Egyptian — the root of *Medu Netjer*, "words of the gods," the name Egyptians gave their hieroglyphic script.
 
-This app lets you spell English words in hieroglyphs, learn the alphabet, build your name in a royal cartouche, study the pharaohs, and practice with flashcards — all with an authentic tomb-wall aesthetic.
+This app lets you spell English words in hieroglyphs, learn the alphabet, build your name in a royal cartouche, study the pharaohs, and practice with flashcards — all styled like a tomb wall.
 
-> **Spelling, not translation.** MEDU writes English *sounds* with hieroglyph signs — the same trick Ptolemaic scribes used for foreign names like Cleopatra. It does not translate English into the ancient Egyptian language, which had its own words and grammar. A handful of common words (ankh, nefer, pharaoh…) use their real Egyptian spellings instead.
+> **Spelling, not translation.** MEDU writes English *sounds* with hieroglyph signs — the same trick Ptolemaic scribes used for foreign names like Cleopatra. It does not translate English into the ancient Egyptian language, which had its own words and grammar. A handful of common words (ankh, nefer, pharaoh…) use their Egyptian word-signs or symbols instead — EYE, for example, gives the Eye of Horus 𓂀.
 
 ---
 
@@ -29,8 +29,8 @@ This app lets you spell English words in hieroglyphs, learn the alphabet, build 
 
 | Tab | What you can do |
 |---|---|
-| 𓂀 **Translate** | Type English → see animated hieroglyphs. Tap any glyph for its name. Read hieroglyphs back → English. Speak aloud. Copy to clipboard. |
-| 𓄿 **Alphabet** | 26-tile grid of the hieroglyphic alphabet. Tap to hear the sound and see full detail. |
+| 𓂀 **Spell** | Type English → see it spelled in animated hieroglyphs. Tap any glyph for its name. Read hieroglyphs back → English. Speak aloud. Copy to clipboard. |
+| 𓄿 **Alphabet** | 26 tiles, one per English letter, showing the sign MEDU uses for it. Tap to hear the sound and see full detail. |
 | 𓏣 **Cartouche** | Generate your name inside a royal oval, just like the pharaohs. Save as PNG or print. |
 | 𓏠 **Lessons** | 6 structured lessons from "What Are Hieroglyphs?" to determinatives. Progress saved automatically. |
 | 𓉐 **Pharaohs** | 8 legendary rulers with their cartouche glyphs and full bio cards. |
@@ -52,15 +52,15 @@ No server needed — open either HTML file directly in any browser. The app code
 
 - **React 18** (production build) with JSX precompiled by **esbuild**
 - **Unicode hieroglyphs** from the U+13000–U+1342F block
-- **Noto Sans Egyptian Hieroglyphs** font for authentic glyph rendering
-- Translation engine: whole-word sacred glyph lookup → digraph scan → letter-by-letter fallback; reverse translation uses longest-match
+- **Noto Sans Egyptian Hieroglyphs** font, cached for offline use, so every sign renders
+- Spelling engine: whole-word sacred glyph lookup → digraph scan → letter-by-letter fallback; reading back uses longest-match
 - Progress persists in `localStorage`
 
 ---
 
 ## Sacred Words
 
-The translator recognizes 25 special whole-word translations beyond the alphabet:
+MEDU writes 25 words with their own Egyptian signs instead of spelling them letter by letter:
 
 𓋹 ANKH · 𓉐𓉻 PHARAOH · 𓆎𓅓𓏏𓊖 EGYPT · 𓇳 RA · 𓂀 EYE · 𓅃 FALCON · 𓄤 NEFER · 𓊵 HOTEP · 𓈗 WATER · 𓋞 GOLD · *…and more*
 
@@ -68,7 +68,7 @@ The translator recognizes 25 special whole-word translations beyond the alphabet
 
 ## Design
 
-Inspired by tomb-wall carvings — deep midnight background, gold accents, and the Cinzel display font, with a `glyphCarveIn` reveal animation on every translation.
+Inspired by tomb-wall carvings — deep midnight background, gold accents, and the Cinzel display font, with a `glyphCarveIn` reveal animation on every result.
 
 | Token | Hex | Role |
 |---|---|---|
@@ -95,11 +95,11 @@ Offline mode and install-as-app only work when the pages are served over http(s)
 
 | Path | What it is |
 |---|---|
-| `data.js` | Glyph data + translation engine, shared by both pages |
+| `data.js` | Glyph data + spelling engine, shared by both pages |
 | `src/desktop.jsx`, `src/mobile.jsx` | App code for each page (edit these) |
 | `src/shared.jsx` | Helpers both apps use (dialogs, speech) |
 | `dist/` | Compiled app code the pages load — generated, don't edit |
-| `tests/` | Checks for the data and translator |
+| `tests/` | Checks for the data and speller |
 | `sw.js`, `manifest*.webmanifest`, `icons/` | Offline support and install-as-app |
 
 ## Making Changes
@@ -107,7 +107,7 @@ Offline mode and install-as-app only work when the pages are served over http(s)
 ```bash
 npm install        # once
 npm run build      # after editing anything in src/ — then commit dist/ too
-npm test           # data + translator checks
+npm test           # data + speller checks
 ```
 
 `data.js`, the HTML and CSS need no build. If you add a new file that the pages load, add it to `OWN_FILES` in `sw.js` (a test checks this). CI runs the tests and fails if `dist/` wasn't rebuilt after a `src/` change.
